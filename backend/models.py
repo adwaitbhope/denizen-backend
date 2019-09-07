@@ -41,7 +41,7 @@ class Wing(models.Model):
     # Specifies the naming convention for apartments in the wing
     # 1 ==> "Per apartment", eg. A/34
     # 2 ==> "Per floor", eg. A/34 will become A/902 (assuming 4 apartments per floor)
-    naming_convention = models.IntegerField()
+    naming_convention = models.IntegerField(default=None, blank=True, null=True)
 
 
 class Amenity(models.Model):
@@ -51,7 +51,7 @@ class Amenity(models.Model):
 
     # 1 ==> "Per hour", amenity will be billed by the hour
     # 2 ==> "Per day", amenity will be billed by the day
-    time_period = models.IntegerField()
+    time_period = models.IntegerField(default=None, blank=True, null=True)
 
     # To specify interval of billing
     # Eg. if it is set to 2, billing will be done for every 2 hours or every 2 days (as per the time_period attribute)
@@ -59,11 +59,11 @@ class Amenity(models.Model):
 
 
 class Booking(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    amenity = models.ForeignKey(Amenity, on_delete=models.CASCADE)
-    billing_from = models.DateTimeField()
-    billing_to = models.DateTimeField()
-    amount = models.IntegerField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    amenity = models.ForeignKey(Amenity, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    billing_from = models.DateTimeField(default=None, blank=True, null=True)
+    billing_to = models.DateTimeField(default=None, blank=True, null=True)
+    amount = models.IntegerField(default=None, blank=True, null=True)
 
 
 class Notice(models.Model):
