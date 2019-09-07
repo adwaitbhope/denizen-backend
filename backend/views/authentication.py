@@ -1,17 +1,21 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from django.utils import timezone
 from itertools import chain
 
-from .models import *
+from ..models import *
 
+@csrf_exempt
 def index(request):
     return HttpResponse("Hello, world. You're at the index.")
 
+
+@csrf_exempt
 def login(request):
-    username = request.GET.get('username', None)
-    password = request.GET.get('password', None)
+    username = request.POST['username']
+    password = request.POST['password']
 
     user = authenticate(request, username=username, password=password)
 
@@ -20,38 +24,42 @@ def login(request):
     return JsonResponse([{'login': 1}], safe=False)
 
 
+@csrf_exempt
 def register_existing(request, application_id):
     township = Township.objects.filter(application_id=application_id)
 
-    wings_num = int(request.GET['wings_num'])
+    wings_num = int(request.POST['wings_num'])
     for i in range(wings_num):
-        wing_name = request.GET['wing_' + str(i) + '_name']
-        wing_floors = request.GET['wing_' + str(i) + '_floors']
-        wing_apt_per_floor = request.GET['wing_' + str(i) + '_apt_per_floor']
-        wing = Wing.objects.create(township=township, name=wing_name, floors=wing_floors, apt_per_floor=wing_apt_per_floor)
+        wing_name = request.POST['wing_' + str(i) + '_name']
+        wing_floors = request.POST['wing_' + str(i) + '_floors']
+        wing_apt_per_floor = request.POST['wing_' + str(i) + '_apt_per_floor']
+        wing_naming_convention = request.POST['wing_' + str(i) + '_naming_convention']
+        wing = Wing.objects.create(township=township, name=wing_name, floors=wing_floors, apt_per_floor=wing_apt_per_floor, naming_convention=wing_naming_convention)
 
-    amenities_num = int(request.GET['amenities_num'])
+    amenities_num = int(request.POST['amenities_num'])
     for i in range(amenities_num):
-        amenity_name = request.GET['amenity_' + str(i) + '_name']
-        amenity_rate = request.GET['amenity_' + str(i) + '_rate']
-        amenity_amt_time_period = request.GET['amenity_' + str(i) + '_amt_time_period']
-        amenity = Amenity.objects.create(township=township, name=amenity_name, rate=amenity_rate, amt_time_period=amenity_amt_time_period)
+        amenity_name = request.POST['amenity_' + str(i) + '_name']
+        amenity_rate = request.POST['amenity_' + str(i) + '_rate']
+        amenity_amt_time_period = request.POST['amenity_' + str(i) + '_amt_time_period']
+        amenity_time_period = request.POST['amenity_' + str(i) + '_time_period']
+        amenity = Amenity.objects.create(township=township, name=amenity_name, rate=amenity_rate, amt_time_period=amenity_amt_time_period, time_period=amenity_time_period)
 
     return JsonResponse([{'registration_status':1}], safe=False)
 
 
+@csrf_exempt
 def register_new(request):
-    applicant_name = request.GET['applicant_name']
-    applicant_phone = request.GET['applicant_phone']
-    applicant_email = request.GET['applicant_email']
-    applicant_designation = request.GET['applicant_designation']
+    applicant_name = request.POST['applicant_name']
+    applicant_phone = request.POST['applicant_phone']
+    applicant_email = request.POST['applicant_email']
+    applicant_designation = request.POST['applicant_designation']
 
-    name = request.GET['name']
-    address = request.GET['address']
-    phone = request.GET['phone']
-    geo_address = request.GET['geo_address']
-    lat = request.GET['lat']
-    lng = request.GET['lng']
+    name = request.POST['name']
+    address = request.POST['address']
+    phone = request.POST['phone']
+    geo_address = request.POST['geo_address']
+    lat = request.POST['lat']
+    lng = request.POST['lng']
 
     time = str(timezone.now())
     application_id = list(chain(time[2:4].split(), time[5:7].split(), time[8:10].split()))

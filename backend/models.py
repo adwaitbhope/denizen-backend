@@ -7,6 +7,8 @@ from django.utils import timezone
 class User(AbstractUser):
     apartment = models.CharField(max_length=20)
     phone = models.CharField(max_length=10, default=None, blank=True, null=True)
+
+    # Type of user, values can be 'admin', 'resident' or 'security'
     type = models.CharField(max_length=10, default='resident')
 
 
@@ -15,11 +17,13 @@ class Township(models.Model):
     registration_timestamp = models.DateTimeField(default=timezone.now)
     verified = models.BooleanField(default=False)
 
+    # Applicant details
     applicant_name = models.CharField(max_length=30)
     applicant_phone = models.CharField(max_length=10)
     applicant_email = models.CharField(max_length=35)
     applicant_designation = models.CharField(max_length=20)
 
+    # Township details
     name = models.CharField(max_length=50)
     address = models.TextField()
     phone = models.CharField(max_length=10)
@@ -32,20 +36,34 @@ class Wing(models.Model):
     name = models.CharField(max_length=20)
     township = models.ForeignKey(Township, on_delete=models.CASCADE)
     floors = models.IntegerField()
-    apt_per_floor = models.IntegerField()
-    # naming
+    apts_per_floor = models.IntegerField()
+
+    # Specifies the naming convention for apartments in the wing
+    # 1 ==> "Per apartment", eg. A/34
+    # 2 ==> "Per floor", eg. A/34 will become A/902 (assuming 4 apartments per floor)
+    naming_convention = models.IntegerField()
 
 
 class Amenity(models.Model):
     name = models.CharField(max_length=20)
     township = models.ForeignKey(Township, on_delete=models.CASCADE)
-    rate = models.IntegerField()
-    amt_time_period = models.IntegerField()     # per 1 hour or per 2 hour
-    # time_period hour or day
+    billing_rate = models.IntegerField()
+
+    # 1 ==> "Per hour", amenity will be billed by the hour
+    # 2 ==> "Per day", amenity will be billed by the day
+    time_period = models.IntegerField()
+
+    # To specify interval of billing
+    # Eg. if it is set to 2, billing will be done for every 2 hours or every 2 days (as per the time_period attribute)
+    amt_time_period = models.IntegerField()
 
 
 class Booking(models.Model):
-    pass
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amenity = models.ForeignKey(Amenity, on_delete=models.CASCADE)
+    billing_from = models.DateTimeField()
+    billing_to = models.DateTimeField()
+    amount = models.IntegerField()
 
 
 class Notice(models.Model):
