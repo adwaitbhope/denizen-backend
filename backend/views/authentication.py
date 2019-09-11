@@ -21,7 +21,7 @@ def login(request):
 
     if user is None:
         return JsonResponse([{'login': 0}], safe=False)
-    return JsonResponse([{'login': 1}, {'type':user.type}], safe=False)
+    return JsonResponse([{'login': 1, 'type':user.type}], safe=False)
 
 
 @csrf_exempt
