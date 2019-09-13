@@ -4,9 +4,68 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from django.utils import timezone
 from itertools import chain
+from fpdf import FPDF
 
 from ..models import *
 import random, string
+
+@csrf_exempt
+def get_credentials(request):
+    pass
+
+def create_pdf(township, admin_creds, security_creds, resident_creds):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 16)
+    pdf.cell(38, 10, township.name, border='B', ln=1, align='C')
+    pdf.ln()
+
+    pdf.set_font('Arial', 'B', 12)
+    pdf.cell(150, 6, 'Admins', border=0, ln=1, align='L')
+
+    pdf.set_font('Times', '', 10)
+    for admin in admin_creds:
+        pdf.set_x(20)
+        pdf.cell(20, 4, 'Username: ', border=0, ln=0, align='L')
+        pdf.cell(20, 4, admin['username'], border=0, ln=1, align='L')
+        pdf.set_x(20)
+        pdf.cell(20, 4, 'Password: ', border=0, ln=0, align='L')
+        pdf.cell(20, 4, admin['password'], border=0, ln=1, align='L')
+        pdf.ln()
+
+    pdf.ln()
+    pdf.set_font('Arial', 'B', 12)
+    pdf.cell(150, 6, 'Security', border=0, ln=1, align='L')
+
+    pdf.set_font('Times', '', 10)
+    for security in security_creds:
+        pdf.set_x(20)
+        pdf.cell(20, 4, 'Username: ', border=0, ln=0, align='L')
+        pdf.cell(20, 4, security['username'], border=0, ln=1, align='L')
+        pdf.set_x(20)
+        pdf.cell(20, 4, 'Password: ', border=0, ln=0, align='L')
+        pdf.cell(20, 4, security['password'], border=0, ln=1, align='L')
+        pdf.ln()
+
+    pdf.ln()
+    pdf.set_font('Arial', 'B', 12)
+    pdf.cell(150, 8, 'Residents', border=0, ln=1, align='L')
+
+    for resident in resident_creds:
+        pdf.set_x(20)
+        pdf.set_font('Arial', 'B', 10)
+        pdf.cell(20, 4, resident['apartment'], border=0, ln=1, align='L')
+        pdf.set_x(20)
+        pdf.set_font('Times', '', 10)
+        pdf.cell(20, 4, 'Username: ', border=0, ln=0, align='L')
+        pdf.cell(20, 4, resident['username'], border=0, ln=1, align='L')
+        pdf.set_x(20)
+        pdf.cell(20, 4, 'Password: ', border=0, ln=0, align='L')
+        pdf.cell(20, 4, resident['password'], border=0, ln=1, align='L')
+        pdf.ln()
+
+
+    pdf.output('../creds.pdf')
 
 def random_string(length):
     letters = string.ascii_lowercase + string.digits
@@ -59,7 +118,7 @@ def register_existing(request):
     security_ids = int(request.POST['security_ids'])
     wings_num = int(request.POST['wings_num'])
 
-    resident_credentials = {}
+    resident_credentials = []
     for i in range(wings_num):
         wing_name = request.POST['wing_' + str(i) + '_name']
         wing_floors = request.POST['wing_' + str(i) + '_floors']
@@ -79,7 +138,7 @@ def register_existing(request):
                 elif wing_naming_convention == '2':
                     apartment = str(floor + 1) + str(apt + 1).zfill(2)
 
-                resident_credentials[wing_name + '/' + apartment] = {random_uname: random_pwd}
+                resident_credentials.append({'apartment': wing_name + '/' + apartment, 'username': random_uname, 'password': random_pwd})
                 resident = User.objects.create_user(username=random_uname, password=random_pwd, township=township, type='resident', wing=wing, apartment=apartment)
 
 
@@ -91,22 +150,23 @@ def register_existing(request):
         amenity_time_period = request.POST['amenity_' + str(i) + '_time_period']
         amenity = Amenity.objects.create(township=township, name=amenity_name, billing_rate=amenity_billing_rate, amt_time_period=amenity_amt_time_period, time_period=amenity_time_period)
 
-    admin_credentials = {}
+    admin_credentials = []
     for i in range(admin_ids):
         random_uname = random_string(8)
         random_pwd = random_string(8)
 
         admin = User.objects.create_user(username=random_uname, password=random_pwd, township=township, type='admin')
-        admin_credentials[random_uname] = random_pwd
+        admin_credentials.append({'username':random_uname, 'password':random_pwd})
 
-    security_credentials = {}
+    security_credentials = []
     for i in range(security_ids):
         random_uname = random_string(8)
         random_pwd = random_string(8)
 
         security = User.objects.create_user(username=random_uname, password=random_pwd, township=township, type='security')
-        security_credentials[random_uname] = random_pwd
+        security_credentials.append({'username':random_uname, 'password':random_pwd})
 
+    create_pdf(township, admin_credentials, security_credentials, resident_credentials)
     return JsonResponse([{'registration_status':1}, admin_credentials, security_credentials, resident_credentials], safe=False)
 
 
