@@ -44,7 +44,12 @@ class User(AbstractUser):
     # Type of user, values can be 'admin', 'resident' or 'security'
     type = models.CharField(max_length=10, default='resident')
 
+    # Only applicable to type 'admin'
+    designation = models.CharField(max_length=30, default=None, blank=True, null=True)
+
     township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
+
+    # Only applicable to type 'resident'
     wing = models.ForeignKey(Wing, on_delete=models.CASCADE, default=None, blank=True, null=True)
     apartment = models.CharField(max_length=10, default=None, blank=True, null=True)
 
