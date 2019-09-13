@@ -4,14 +4,6 @@ from django.utils import timezone
 
 # Create your models here.
 
-class User(AbstractUser):
-    apartment = models.CharField(max_length=20)
-    phone = models.CharField(max_length=10, default=None, blank=True, null=True)
-
-    # Type of user, values can be 'admin', 'resident' or 'security'
-    type = models.CharField(max_length=10, default='resident')
-
-
 class Township(models.Model):
     application_id = models.CharField(max_length=10, unique=True, default='0')
     registration_timestamp = models.DateTimeField(default=timezone.now)
@@ -44,6 +36,18 @@ class Wing(models.Model):
     naming_convention = models.IntegerField(default=None, blank=True, null=True)
 
 
+class User(AbstractUser):
+    apartment = models.CharField(max_length=20)
+    phone = models.CharField(max_length=10, default=None, blank=True, null=True)
+
+    # Type of user, values can be 'admin', 'resident' or 'security'
+    type = models.CharField(max_length=10, default='resident')
+
+    township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    wing = models.ForeignKey(Wing, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    apartment = models.CharField(max_length=10, default=None, blank=True, null=True)
+
+
 class Amenity(models.Model):
     name = models.CharField(max_length=20)
     township = models.ForeignKey(Township, on_delete=models.CASCADE)
@@ -61,12 +65,37 @@ class Amenity(models.Model):
     free_for_members = models.BooleanField(default=False)
 
 
+class Payment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    amount = models.FloatField(default=None, blank=True, null=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+
+    # 1 ==> "Cash"
+    # 2 ==> "Cheque"
+    # 3 ==> "Digital"
+    mode = models.IntegerField(default=None, blank=True, null=True)
+
+    # 1 ==> "Credit" (w.r.t. township's account)
+    # 2 ==> "Debit"
+    type = models.IntegerField(default=None, blank=True, null=True)
+
+    # 1 ==> "Maintenance"
+    # 2 ==> "Membership"
+    # 3 ==> "Amenity"
+    # 0 ==> "Other"
+    sub_type = models.IntegerField(default=None, blank=True, null=True)
+    description = models.TextField(default=None, blank=True, null=True)
+
+    cheque_no = models.CharField(max_length=6, default=None, blank=True, null=True)
+    transaction_id = models.CharField(max_length=40, default=None, blank=True, null=True)
+
+
 class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True)
     amenity = models.ForeignKey(Amenity, on_delete=models.CASCADE, default=None, blank=True, null=True)
     billing_from = models.DateTimeField(default=None, blank=True, null=True)
     billing_to = models.DateTimeField(default=None, blank=True, null=True)
-    amount = models.IntegerField(default=None, blank=True, null=True)
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE, default=None, blank=True, null=True)
 
 
 class Notice(models.Model):
@@ -102,8 +131,4 @@ class Visitor(models.Model):
 
 
 class Entry(models.Model):
-    pass
-
-
-class Payment(models.Model):
     pass
