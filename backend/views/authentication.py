@@ -40,6 +40,9 @@ def login(request):
     data['profile_updated'] = user.profile_updated
     data['township'] = user.township.name
 
+    if user.type == 'admin':
+        data['designation'] = user.designation
+
     if user.type == 'resident':
         data['wing'] = user.wing.name
         data['apartment'] = user.apartment

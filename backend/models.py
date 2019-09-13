@@ -37,7 +37,6 @@ class Wing(models.Model):
 
 
 class User(AbstractUser):
-    apartment = models.CharField(max_length=20)
     phone = models.CharField(max_length=10, default=None, blank=True, null=True)
     profile_updated = models.BooleanField(default=False)
 
