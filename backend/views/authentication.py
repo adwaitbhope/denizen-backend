@@ -2,16 +2,18 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
+from django.core.mail import send_mail, EmailMessage
 from django.utils import timezone
 from itertools import chain
 from fpdf import FPDF
-
 from ..models import *
-import random, string
+import os, random, string
+
 
 @csrf_exempt
 def get_credentials(request):
     pass
+
 
 def create_pdf(township, admin_creds, security_creds, resident_creds):
     pdf = FPDF()
@@ -49,7 +51,7 @@ def create_pdf(township, admin_creds, security_creds, resident_creds):
 
     pdf.ln()
     pdf.set_font('Arial', 'B', 12)
-    pdf.cell(150, 8, 'Residents', border=0, ln=1, align='L')
+    pdf.cell(150, 6, 'Residents', border=0, ln=1, align='L')
 
     for resident in resident_creds:
         pdf.set_x(20)
@@ -64,8 +66,10 @@ def create_pdf(township, admin_creds, security_creds, resident_creds):
         pdf.cell(20, 4, resident['password'], border=0, ln=1, align='L')
         pdf.ln()
 
+    path = township.application_id + '.pdf'
+    pdf.output(path)
+    return path
 
-    pdf.output('../creds.pdf')
 
 def random_string(length):
     letters = string.ascii_lowercase + string.digits
@@ -73,6 +77,7 @@ def random_string(length):
     while User.objects.filter(username=random_str).count() != 0:
         random_str = ''.join(random.sample(letters, length))
     return random_str
+
 
 @csrf_exempt
 def index(request):
@@ -166,7 +171,14 @@ def register_existing(request):
         security = User.objects.create_user(username=random_uname, password=random_pwd, township=township, type='security')
         security_credentials.append({'username':random_uname, 'password':random_pwd})
 
-    create_pdf(township, admin_credentials, security_credentials, resident_credentials)
+    pdf_path = create_pdf(township, admin_credentials, security_credentials, resident_credentials)
+    email = EmailMessage('Welcome to Township Manager', 'Thank you for registering with us.\nPFA the document containing login credentials for everyone.\n\nP.S. Username and password both must be changed upon first login.', 'noreply@township-manager.com', [township.applicant_email])
+    email.content_subtype = 'html'
+    email.attach_file(pdf_path)
+    email.send()
+
+    os.remove(pdf_path)
+
     return JsonResponse([{'registration_status':1}, admin_credentials, security_credentials, resident_credentials], safe=False)
 
 
