@@ -10,11 +10,6 @@ from ..models import *
 import os, random, string
 
 
-@csrf_exempt
-def get_credentials(request):
-    pass
-
-
 def create_pdf(township, admin_creds, security_creds, resident_creds):
     pdf = FPDF()
     pdf.add_page()
@@ -217,3 +212,10 @@ def register_new(request):
     township = Township.objects.create(application_id=application_id, applicant_name=applicant_name, applicant_phone=applicant_phone, applicant_email=applicant_email, applicant_designation=applicant_designation, name=name, address=address, phone=phone, geo_address=geo_address, lat=lat, lng=lng)
 
     return JsonResponse([{'registration_status' : 1, 'application_id' : application_id}], safe=False)
+
+
+@csrf_exempt
+def register_certificate(request):
+
+    print(request.FILES)
+    return HttpResponse("howdy modi")
