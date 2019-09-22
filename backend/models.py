@@ -64,7 +64,7 @@ class Amenity(models.Model):
 
     # To specify interval of billing
     # Eg. if it is set to 2, billing will be done for every 2 hours or every 2 days (as per the time_period attribute)
-    amt_time_period = models.IntegerField()
+    amt_time_period = models.IntegerField(default=1)
 
     # amount will be charged only if amenity is not free for members
     free_for_members = models.BooleanField(default=False)

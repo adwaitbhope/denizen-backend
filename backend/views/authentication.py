@@ -146,7 +146,7 @@ def register_existing(request):
     for i in range(amenities_num):
         amenity_name = request.POST['amenity_' + str(i) + '_name']
         amenity_billing_rate = request.POST['amenity_' + str(i) + '_rate']
-        amenity_amt_time_period = request.POST['amenity_' + str(i) + '_amt_time_period']
+        amenity_amt_time_period = request.POST.get('amenity_' + str(i) + '_amt_time_period', 1)
         amenity_time_period = request.POST['amenity_' + str(i) + '_time_period']
         amenity = Amenity.objects.create(township=township, name=amenity_name, billing_rate=amenity_billing_rate, amt_time_period=amenity_amt_time_period, time_period=amenity_time_period)
 
