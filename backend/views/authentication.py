@@ -66,6 +66,76 @@ def create_pdf(township, admin_creds, security_creds, resident_creds):
     return path
 
 
+def create_details_pdf(township):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_left_margin(14)
+    pdf.set_font('Arial', 'B', 20)
+    pdf.cell(50, 10, township.name, border='0', ln=1, align='C')
+    pdf.set_font('Arial', '', 14)
+    pdf.cell(20, 6, 'Application ID: ' + township.application_id, border=0, ln=0, align='L')
+    pdf.ln()
+    pdf.ln()
+    pdf.ln()
+
+    pdf.set_font('Arial', 'B', 16)
+    pdf.cell(50, 8, 'Township details', border='', ln=1, align='L')
+
+    pdf.set_font('Times', 'B', 14)
+    pdf.cell(40, 6, 'Name: ', border=0, ln=0, align='L')
+    pdf.set_font('Times', '', 14)
+    pdf.cell(50, 6, township.name, border=0, ln=1, align='L')
+
+    pdf.set_font('Times', 'B', 14)
+    pdf.cell(40, 6, 'Phone: ', border=0, ln=0, align='L')
+    pdf.set_font('Times', '', 14)
+    pdf.cell(50, 6, township.phone, border=0, ln=1, align='L')
+
+    pdf.set_font('Times', 'B', 14)
+    pdf.cell(40, 6, 'Address: ', border=0, ln=0, align='L')
+    pdf.set_font('Times', '', 14)
+    pdf.set_left_margin(54)
+    pdf.write(6, township.address)
+    pdf.set_left_margin(14)
+
+    pdf.ln()
+    pdf.set_font('Times', 'B', 14)
+    pdf.cell(40, 6, 'Location: ', border=0, ln=0, align='L')
+    pdf.set_font('Times', '', 14)
+    pdf.set_text_color(0, 0, 255)
+    pdf.write(6, 'Click here', 'https://www.google.com/maps/search/?api=1&query=' + str(township.lat) + ',' + str(township.lng))
+    pdf.ln()
+    pdf.ln()
+
+    pdf.set_font('Arial', 'B', 16)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(50, 8, 'Applicant details', border='', ln=1, align='L')
+
+    pdf.set_font('Times', 'B', 14)
+    pdf.cell(40, 6, 'Name: ', border=0, ln=0, align='L')
+    pdf.set_font('Times', '', 14)
+    pdf.cell(50, 6, township.applicant_name, border=0, ln=1, align='L')
+
+    pdf.set_font('Times', 'B', 14)
+    pdf.cell(40, 6, 'Designation: ', border=0, ln=0, align='L')
+    pdf.set_font('Times', '', 14)
+    pdf.cell(50, 6, township.applicant_designation, border=0, ln=1, align='L')
+
+    pdf.set_font('Times', 'B', 14)
+    pdf.cell(40, 6, 'Email: ', border=0, ln=0, align='L')
+    pdf.set_font('Times', '', 14)
+    pdf.cell(50, 6, township.applicant_email, border=0, ln=1, align='L')
+
+    pdf.set_font('Times', 'B', 14)
+    pdf.cell(40, 6, 'Phone: ', border=0, ln=0, align='L')
+    pdf.set_font('Times', '', 14)
+    pdf.cell(50, 6, township.applicant_phone, border=0, ln=1, align='L')
+
+    details_path = township.application_id + '_details.pdf'
+    pdf.output(details_path)
+    return details_path
+
+
 def random_string(length):
     letters = string.ascii_lowercase + string.digits
     random_str = ''.join(random.sample(letters, length))
@@ -191,6 +261,8 @@ def register_new(request):
     lat = request.POST['lat']
     lng = request.POST['lng']
 
+    file = request.FILES['certificate']
+
     time = str(timezone.now())
     application_id = list(chain(time[2:4].split(), time[5:7].split(), time[8:10].split()))
 
@@ -211,11 +283,30 @@ def register_new(request):
 
     township = Township.objects.create(application_id=application_id, applicant_name=applicant_name, applicant_phone=applicant_phone, applicant_email=applicant_email, applicant_designation=applicant_designation, name=name, address=address, phone=phone, geo_address=geo_address, lat=lat, lng=lng)
 
+    certificate_path = township.application_id + '_certificate.pdf'
+
+    dest = open(certificate_path, 'wb')
+    if file.multiple_chunks:
+        for c in file.chunks():
+            dest.write(c)
+    else:
+        dest.write(file.read())
+    dest.close()
+
+    details_path = create_details_pdf(township)
+
+    email_subject = 'New application! (' + township.application_id + ')'
+    email_to = ['adwaitbhope@gmail.com', 'vinodkamat98@gmail.com', 'atharvadhekne@gmail.com', 'aashayz28@gmail.com']
+    email = EmailMessage(email_subject, 'A new society has submitted an application', 'noreply@township-manager.com', email_to)
+    email.content_subtype = 'html'
+    email.attach_file(details_path)
+    email.attach_file(certificate_path)
+    email.send()
+
+    os.remove(details_path)
+    os.remove(certificate_path)
+
+    client_email = EmailMessage('Thank you for registering!', 'Your application has been submitted successfully, and your Application ID is ' + township.application_id, 'noreply@township-manager.com', [township.applicant_email])
+    client_email.send()
+
     return JsonResponse([{'registration_status' : 1, 'application_id' : application_id}], safe=False)
-
-
-@csrf_exempt
-def register_certificate(request):
-
-    print(request.FILES)
-    return HttpResponse("howdy modi")
