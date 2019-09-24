@@ -39,6 +39,9 @@ class Wing(models.Model):
 
 
 class User(AbstractUser):
+    reset_password_link = models.CharField(max_length=15, default=None, blank=True, null=True)
+    reset_password_request_timestamp = models.DateTimeField(default=None, blank=True, null=True)
+
     phone = models.CharField(max_length=10, default=None, blank=True, null=True)
     profile_updated = models.BooleanField(default=False)
 

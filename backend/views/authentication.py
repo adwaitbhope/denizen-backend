@@ -9,8 +9,8 @@ from django.utils import timezone
 from itertools import chain
 from fpdf import FPDF
 from ..models import *
-import os, random, string
 from django.conf import settings
+import os, random, string
 
 
 def create_pdf(township, admin_creds, security_creds, resident_creds):
@@ -155,6 +155,14 @@ def get_township_verification_link(length):
     return random_str
 
 
+def get_password_reset_link(length):
+    letters = string.ascii_letters + string.digits
+    random_str = ''.join(random.sample(letters, length))
+    while User.objects.filter(reset_password_link=random_str).count() != 0:
+        random_str = ''.join(random.sample(letters, length))
+    return random_str
+
+
 @csrf_exempt
 def index(request):
     return HttpResponse("Hello, world. You're at the index.")
@@ -248,7 +256,7 @@ def register_existing(request):
         security_credentials.append({'username':random_uname, 'password':random_pwd})
 
     pdf_path = create_pdf(township, admin_credentials, security_credentials, resident_credentials)
-    email = EmailMessage('Welcome to Township Manager', 'Thank you for registering with us.\nPFA the document containing login credentials for everyone.\n\nP.S. Username and password both must be changed upon first login.', 'noreply@township-manager.com', [township.applicant_email])
+    email = EmailMessage('Welcome to Township Manager', 'Thank you for registering with us.\nPFA the document containing login credentials for everyone.\n\nP.S. Username and password both must be changed upon first login.', settings.DOMAIN_EMAIL, [township.applicant_email])
     email.content_subtype = 'html'
     email.attach_file(pdf_path)
     email.send()
@@ -312,8 +320,7 @@ def register_new(request):
     html_content = html.render({'township_name': township.name, 'applicant_name' : township.applicant_name, 'verification_link' : settings.CURRENT_DOMAIN + '/register/verify/' + township.verification_link})
 
     email_subject = 'New application! (' + township.application_id + ')'
-    email_to = ['adwaitbhope@gmail.com', 'vinodkamat98@gmail.com', 'atharvadhekne@gmail.com', 'aashayz28@gmail.com']
-    email = EmailMultiAlternatives(email_subject, 'A new society has submitted an application', 'noreply@township-manager.com', email_to)
+    email = EmailMultiAlternatives(email_subject, 'A new society has submitted an application', settings.DOMAIN_EMAIL, settings.ADMIN_EMAIL_IDS)
     email.attach_alternative(html_content, "text/html")
     email.content_subtype = 'html'
     email.attach_file(details_path)
@@ -323,7 +330,7 @@ def register_new(request):
     os.remove(details_path)
     os.remove(certificate_path)
 
-    client_email = EmailMessage('Thank you for registering!', 'Your application has been submitted successfully, and your Application ID is ' + township.application_id, 'noreply@township-manager.com', [township.applicant_email])
+    client_email = EmailMessage('Thank you for registering!', 'Your application has been submitted successfully, and your Application ID is ' + township.application_id, settings.DOMAIN_EMAIL, [township.applicant_email])
     client_email.send()
 
     return JsonResponse([{'registration_status' : 1, 'application_id' : application_id}], safe=False)
@@ -354,3 +361,32 @@ def check_verification(request):
     data['verified'] = township.verified
 
     return JsonResponse([data], safe=False)
+
+
+@csrf_exempt
+def send_reset_password_link(request):
+    email = request.POST['email']
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return JsonResponse([{'user_found':0}], safe=False)
+
+    reset_password_link = get_password_reset_link(15)
+    user.reset_password_link = reset_password_link
+    user.reset_password_request_timestamp = timezone.now()
+    user.save()
+
+    html = get_template('reset_password.html')
+    html_content = html.render({'reset_password_link': reset_password_link})
+
+    subject = 'Reset password'
+    client_email = EmailMultiAlternatives('Reset password', 'To reset your password, click on the following link: ', settings.DOMAIN_EMAIL, [email])
+    client_email.attach_alternative(html_content, "text/html")
+    client_email.content_subtype = 'html'
+    client_email.send()
+    return JsonResponse([{'user_found':1, 'email_sent':1}], safe=False)
+
+
+@csrf_exempt
+def reset_password(request):
+    pass

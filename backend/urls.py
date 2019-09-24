@@ -8,4 +8,6 @@ urlpatterns = [
     path('register/verify/<str:verification_link>/', views.verify_township, name='verify_township'),
     path('register/existing/', views.register_existing, name='register_existing'),
     path('register/check_verification/', views.check_verification, name='check_verification'),
+    path('reset_password/', views.send_reset_password_link, name='send_reset_password_link'),
+    path('reset_password/<str: reset_password_id>', views.reset_password, name='reset_password')
 ]
