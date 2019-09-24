@@ -309,7 +309,7 @@ def register_new(request):
     details_path = create_details_pdf(township)
 
     html = get_template('approve_township.html')
-    html_content = html.render({'township_name': township.name, 'applicant_name' : township.applicant_name, 'verification_link' : settings.CURRENT_DOMAIN + '/register/new/verify/' + township.verification_link})
+    html_content = html.render({'township_name': township.name, 'applicant_name' : township.applicant_name, 'verification_link' : settings.CURRENT_DOMAIN + '/register/verify/' + township.verification_link})
 
     email_subject = 'New application! (' + township.application_id + ')'
     email_to = ['adwaitbhope@gmail.com', 'vinodkamat98@gmail.com', 'atharvadhekne@gmail.com', 'aashayz28@gmail.com']
@@ -340,3 +340,17 @@ def verify_township(request, verification_link):
     client_email.send()
 
     return HttpResponse(township.name + ' is now verified!')
+
+
+@csrf_exempt
+def check_verification(request):
+    application_id = request.GET['application_id']
+    township = Township.objects.get(application_id=application_id)
+
+    data = {}
+    data['name'] = township.name
+    data['phone'] = township.phone
+    data['address'] = township.address
+    data['verified'] = township.verified
+
+    return JsonResponse([data], safe=False)
