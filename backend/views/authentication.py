@@ -2,12 +2,15 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import send_mail, EmailMessage, EmailMultiAlternatives
+from django.template.loader import get_template
+from django.template import Context
 from django.utils import timezone
 from itertools import chain
 from fpdf import FPDF
 from ..models import *
 import os, random, string
+from django.conf import settings
 
 
 def create_pdf(township, admin_creds, security_creds, resident_creds):
@@ -140,6 +143,14 @@ def random_string(length):
     letters = string.ascii_lowercase + string.digits
     random_str = ''.join(random.sample(letters, length))
     while User.objects.filter(username=random_str).count() != 0:
+        random_str = ''.join(random.sample(letters, length))
+    return random_str
+
+
+def get_township_verification_link(length):
+    letters = string.ascii_letters + string.digits
+    random_str = ''.join(random.sample(letters, length))
+    while Township.objects.filter(verification_link=random_str).count() != 0:
         random_str = ''.join(random.sample(letters, length))
     return random_str
 
@@ -281,7 +292,9 @@ def register_new(request):
         application_id.extend(id)
         application_id = ''.join(application_id)
 
-    township = Township.objects.create(application_id=application_id, applicant_name=applicant_name, applicant_phone=applicant_phone, applicant_email=applicant_email, applicant_designation=applicant_designation, name=name, address=address, phone=phone, geo_address=geo_address, lat=lat, lng=lng)
+    verification_link = get_township_verification_link(20)
+
+    township = Township.objects.create(application_id=application_id, applicant_name=applicant_name, applicant_phone=applicant_phone, applicant_email=applicant_email, applicant_designation=applicant_designation, name=name, address=address, phone=phone, geo_address=geo_address, lat=lat, lng=lng, verification_link=verification_link)
 
     certificate_path = township.application_id + '_certificate.pdf'
 
@@ -295,9 +308,13 @@ def register_new(request):
 
     details_path = create_details_pdf(township)
 
+    html = get_template('approve_township.html')
+    html_content = html.render({'township_name': township.name, 'applicant_name' : township.applicant_name, 'verification_link' : settings.CURRENT_DOMAIN + '/register/new/verify/' + township.verification_link})
+
     email_subject = 'New application! (' + township.application_id + ')'
     email_to = ['adwaitbhope@gmail.com', 'vinodkamat98@gmail.com', 'atharvadhekne@gmail.com', 'aashayz28@gmail.com']
-    email = EmailMessage(email_subject, 'A new society has submitted an application', 'noreply@township-manager.com', email_to)
+    email = EmailMultiAlternatives(email_subject, 'A new society has submitted an application', 'noreply@township-manager.com', email_to)
+    email.attach_alternative(html_content, "text/html")
     email.content_subtype = 'html'
     email.attach_file(details_path)
     email.attach_file(certificate_path)
@@ -310,3 +327,27 @@ def register_new(request):
     client_email.send()
 
     return JsonResponse([{'registration_status' : 1, 'application_id' : application_id}], safe=False)
+
+
+@csrf_exempt
+def verify_township(request, verification_link):
+    township = Township.objects.get(verification_link=verification_link)
+    township.verified = True
+    township.save()
+
+    client_email = EmailMessage('Your application is verified', 'Your application has been verified by our administrators, you can now continute to step two and complete your registration', 'noreply@township-manager.com', [township.applicant_email])
+    client_email.send()
+
+    return HttpResponse(township.name + ' is now verified!')
+
+
+@csrf_exempt
+def tp_email_check(request):
+    html = get_template('approve_township.html')
+    html_content = html.render({'township_name': 'Kumar Parisar', 'applicant_name' : 'Adwait', 'verification_link' : 'www.google.co.in'})
+    subject, from_email, to = 'hello', 'from@example.com', 'adwaitbhope@gmail.com'
+    msg = EmailMultiAlternatives(subject, 'yo', from_email, [to])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
+
+    return HttpResponse('email sent')

@@ -8,6 +8,7 @@ class Township(models.Model):
     application_id = models.CharField(max_length=10, unique=True, default='0')
     registration_timestamp = models.DateTimeField(default=timezone.now)
     verified = models.BooleanField(default=False)
+    verification_link = models.CharField(max_length=20, default=None, blank=True, null=True)
 
     # Applicant details
     applicant_name = models.CharField(max_length=30)
