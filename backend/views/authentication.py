@@ -333,6 +333,7 @@ def register_new(request):
 def verify_township(request, verification_link):
     township = Township.objects.get(verification_link=verification_link)
     township.verified = True
+    township.verification_timestamp = timezone.now()
     township.save()
 
     client_email = EmailMessage('Your application is verified', 'Your application has been verified by our administrators, you can now continute to step two and complete your registration', 'noreply@township-manager.com', [township.applicant_email])

@@ -9,6 +9,7 @@ class Township(models.Model):
     registration_timestamp = models.DateTimeField(default=timezone.now)
     verified = models.BooleanField(default=False)
     verification_link = models.CharField(max_length=20, default=None, blank=True, null=True)
+    verification_timestamp = models.DateTimeField(default=None, blank=True, null=True)
 
     # Applicant details
     applicant_name = models.CharField(max_length=30)
