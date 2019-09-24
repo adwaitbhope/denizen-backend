@@ -339,15 +339,3 @@ def verify_township(request, verification_link):
     client_email.send()
 
     return HttpResponse(township.name + ' is now verified!')
-
-
-@csrf_exempt
-def tp_email_check(request):
-    html = get_template('approve_township.html')
-    html_content = html.render({'township_name': 'Kumar Parisar', 'applicant_name' : 'Adwait', 'verification_link' : 'www.google.co.in'})
-    subject, from_email, to = 'hello', 'from@example.com', 'adwaitbhope@gmail.com'
-    msg = EmailMultiAlternatives(subject, 'yo', from_email, [to])
-    msg.attach_alternative(html_content, "text/html")
-    msg.send()
-
-    return HttpResponse('email sent')
