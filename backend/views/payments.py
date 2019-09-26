@@ -5,18 +5,14 @@ from django.conf import settings
 from .paytm.Checksum import *
 
 def random_order_id(length):
-    letters = string.ascii_lowercase + string.digits + '@' + '-' + '_' + '.'
+    letters = string.ascii_letters + string.digits + '@' + '-' + '_' + '.'
     random_str = ''.join([random.choice(letters) for _ in range(length)])
-    # while User.objects.filter(username=random_str).count() != 0:
-        # random_str = ''.join(random.sample(letters, length))
     return random_str
 
 
 def random_cust_id(length):
-    letters = string.ascii_lowercase + string.digits + '@' + '!' + '_' + '$'
+    letters = string.ascii_letters + string.digits + '@' + '!' + '_' + '$'
     random_str = ''.join([random.choice(letters) for _ in range(length)])
-    # while User.objects.filter(username=random_str).count() != 0:
-        # random_str = ''.join(random.sample(letters, length))
     return random_str
 
 
@@ -32,8 +28,7 @@ def get_checksumhash(request):
     paytm_params['CALLBACK_URL'] = request.POST['CALLBACK_URL'] + paytm_params['ORDER_ID']
     paytm_params['INDUSTRY_TYPE_ID'] = request.POST['INDUSTRY_TYPE_ID']
 
-    MERCHANT_KEY = settings.PAYTM_MERCHANT_KEY
-    checksum = generate_checksum(paytm_params, MERCHANT_KEY)
+    checksum = generate_checksum(paytm_params, settings.PAYTM_MERCHANT_KEY)
 
     paytm_params['CHECKSUMHASH'] = checksum
 
