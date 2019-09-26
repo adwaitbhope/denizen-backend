@@ -5,6 +5,7 @@ fpdf==1.7.2
 gunicorn==19.9.0
 mysqlclient==1.4.4
 psycopg2==2.8.3
+pycrypto==2.6.1
 pytz==2019.2
 sqlparse==0.3.0
 whitenoise==4.1.3

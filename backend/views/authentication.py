@@ -388,5 +388,5 @@ def send_reset_password_link(request):
 
 
 @csrf_exempt
-def reset_password(request):
+def reset_password(request, reset_password_id):
     pass

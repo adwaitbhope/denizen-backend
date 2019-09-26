@@ -57,6 +57,8 @@ class User(AbstractUser):
     wing = models.ForeignKey(Wing, on_delete=models.CASCADE, default=None, blank=True, null=True)
     apartment = models.CharField(max_length=10, default=None, blank=True, null=True)
 
+    paytm_cust_id = models.CharField(max_length=64, default=None, blank=True, null=True)
+
 
 class Amenity(models.Model):
     name = models.CharField(max_length=20)
@@ -82,7 +84,7 @@ class Payment(models.Model):
 
     # 1 ==> "Cash"
     # 2 ==> "Cheque"
-    # 3 ==> "Digital"
+    # 3 ==> "PayTM"
     mode = models.IntegerField(default=None, blank=True, null=True)
 
     # 1 ==> "Credit" (w.r.t. township's account)
@@ -97,7 +99,13 @@ class Payment(models.Model):
     description = models.TextField(default=None, blank=True, null=True)
 
     cheque_no = models.CharField(max_length=6, default=None, blank=True, null=True)
-    transaction_id = models.CharField(max_length=40, default=None, blank=True, null=True)
+    paytm_order_id = models.CharField(max_length=50, default=None, blank=True, null=True)
+    paytm_checksumhash = models.CharField(max_length=108, default=None, blank=True, null=True)
+
+    # 1 ==> "Successful"
+    # 2 ==> "Failed"
+    # 3 ==> "Pending"
+    paytm_transaction_status = models.IntegerField(default=None, blank=True, null=True)
 
 
 class Booking(models.Model):
