@@ -11,7 +11,7 @@ def random_order_id(length):
 
 
 def random_cust_id(length):
-    letters = string.ascii_letters + string.digits + '@' + '!' + '_' + '$'
+    letters = string.ascii_letters + string.digits + '@' + '-' + '_' + '.'
     random_str = ''.join([random.choice(letters) for _ in range(length)])
     return random_str
 
