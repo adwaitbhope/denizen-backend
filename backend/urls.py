@@ -11,5 +11,6 @@ urlpatterns = [
     path('reset_password/', views.send_reset_password_link, name='send_reset_password_link'),
     path('reset_password/<str: reset_password_id>', views.reset_password, name='reset_password'),
 
-    path('payment/paytm/initiate/', views.get_checksumhash, name='init_payment')
+    path('payment/paytm/initiate/', views.get_checksumhash, name='init_payment'),
+    path('payment/paytm/verify/', views.verify_checksumhash, name='verify_payment')
 ]
