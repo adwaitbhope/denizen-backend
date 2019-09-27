@@ -37,7 +37,7 @@ def get_checksumhash(request):
 
 @csrf_exempt
 def verify_checksumhash(request):
-    received_data = request.POST        # or something equivalent
+    received_data = request.POST
     checksum = ''
     MERCHANT_KEY = settings.PAYTM_MERCHANT_KEY
 
@@ -48,21 +48,9 @@ def verify_checksumhash(request):
     	else:
     		paytm_params[key] = value
 
+    for key, value in paytm_params.items():
+        print(key, value)
+
     is_valid_checksum = verify_checksum(paytm_params, MERCHANT_KEY, checksum)
 
     return JsonResponse([{'checksum_verified':is_valid_checksum}], safe=False)
-
-
-# 1.
-# vinod:
-# sagla
-#
-# return
-# order id
-# merchant id
-# cust id
-# checksumhash
-#
-#
-# 2.
-# checksumhash verification
