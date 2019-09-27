@@ -41,7 +41,7 @@ def get_checksumhash(request):
 def verify_checksumhash(request):
     paytmParams = {}
     paytmParams["MID"] = settings.PAYTM_MERCHANT_ID
-    paytmParams["ORDERID"] = request.POST['ORDERID']
+    paytmParams["ORDERID"] = request.POST['ORDER_ID']
     checksum = generate_checksum(paytmParams, settings.PAYTM_MERCHANT_KEY)
     paytmParams["CHECKSUMHASH"] = checksum
     post_data = json.dumps(paytmParams)
