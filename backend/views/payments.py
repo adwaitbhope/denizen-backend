@@ -50,6 +50,7 @@ def verify_checksumhash(request):
 
     for key, value in paytm_params.items():
         print(key, value)
+    print('CHECKSUMHASH', checksum)
 
     is_valid_checksum = verify_checksum(paytm_params, MERCHANT_KEY, checksum)
 
