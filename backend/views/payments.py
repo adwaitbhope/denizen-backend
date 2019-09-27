@@ -4,6 +4,8 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.conf import settings
 from .paytm.Checksum import *
 
+import requests, json
+
 def random_order_id(length):
     letters = string.ascii_letters + string.digits + '@' + '-' + '_' + '.'
     random_str = ''.join([random.choice(letters) for _ in range(length)])
@@ -37,21 +39,19 @@ def get_checksumhash(request):
 
 @csrf_exempt
 def verify_checksumhash(request):
-    received_data = request.POST
-    checksum = ''
-    MERCHANT_KEY = settings.PAYTM_MERCHANT_KEY
+    paytmParams = {}
+    paytmParams["MID"] = settings.PAYTM_MERCHANT_ID
+    paytmParams["ORDERID"] = request.POST['ORDERID']
+    checksum = generate_checksum(paytmParams, settings.PAYTM_MERCHANT_KEY)
+    paytmParams["CHECKSUMHASH"] = checksum
+    post_data = json.dumps(paytmParams)
 
-    paytm_params = {}
-    for key, value in received_data.items():
-    	if key == 'CHECKSUMHASH':
-    		checksum = value
-    	else:
-    		paytm_params[key] = value
+    # for Staging
+    url = "https://securegw-stage.paytm.in/order/status"
 
-    for key, value in paytm_params.items():
-        print(key, value)
-    print('CHECKSUMHASH', checksum)
+    # for Production
+    # url = "https://securegw.paytm.in/order/status"
 
-    is_valid_checksum = verify_checksum(paytm_params, MERCHANT_KEY, checksum)
+    response = requests.post(url, data = post_data, headers = {"Content-type": "application/json"}).json()
 
-    return JsonResponse([{'checksum_verified':is_valid_checksum}], safe=False)
+    return JsonResponse([response], safe=False)
