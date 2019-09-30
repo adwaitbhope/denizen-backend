@@ -25,6 +25,8 @@ class Township(models.Model):
     lat = models.FloatField()
     lng = models.FloatField()
 
+    paytm_cust_id = models.CharField(max_length=64, default=None, blank=True, null=True)
+
 
 class Wing(models.Model):
     name = models.CharField(max_length=20)
@@ -75,6 +77,25 @@ class Amenity(models.Model):
 
     # amount will be charged only if amenity is not free for members
     free_for_members = models.BooleanField(default=False)
+
+
+class TownshipPayment(models.Model):
+    township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    amount = models.FloatField(default=None, blank=True, null=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+
+    # 1 ==> "Cash"
+    # 2 ==> "Cheque"
+    # 3 ==> "PayTM"
+    mode = models.IntegerField(default=None, blank=True, null=True)
+    paytm_order_id = models.CharField(max_length=50, default=None, blank=True, null=True)
+    paytm_checksumhash = models.CharField(max_length=108, default=None, blank=True, null=True)
+
+    # 0 ==> "Posted"
+    # 1 ==> "Successful"
+    # 2 ==> "Failed"
+    # 3 ==> "Pending"
+    paytm_transaction_status = models.IntegerField(default=None, blank=True, null=True)
 
 
 class Payment(models.Model):

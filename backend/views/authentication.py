@@ -147,6 +147,15 @@ def random_string(length):
     return random_str
 
 
+def get_new_paytm_cust_id():
+    length = 64
+    letters = string.ascii_letters + string.digits + '@' + '-' + '_' + '.'
+    random_str = ''.join([random.choice(letters) for _ in range(length)])
+    while (Township.objects.filter(paytm_cust_id=random_str).count() != 0) and (User.objects.filter(paytm_cust_id=random_str).count() != 0):
+        random_str = ''.join(random.sample(letters, length))
+    return random_str
+
+
 def get_township_verification_link(length):
     letters = string.ascii_letters + string.digits
     random_str = ''.join(random.sample(letters, length))
@@ -301,8 +310,9 @@ def register_new(request):
         application_id = ''.join(application_id)
 
     verification_link = get_township_verification_link(20)
+    paytm_cust_id = get_new_paytm_cust_id()
 
-    township = Township.objects.create(application_id=application_id, applicant_name=applicant_name, applicant_phone=applicant_phone, applicant_email=applicant_email, applicant_designation=applicant_designation, name=name, address=address, phone=phone, geo_address=geo_address, lat=lat, lng=lng, verification_link=verification_link)
+    township = Township.objects.create(application_id=application_id, applicant_name=applicant_name, applicant_phone=applicant_phone, applicant_email=applicant_email, applicant_designation=applicant_designation, name=name, address=address, phone=phone, geo_address=geo_address, lat=lat, lng=lng, verification_link=verification_link, paytm_cust_id=paytm_cust_id)
 
     certificate_path = township.application_id + '_certificate.pdf'
 
@@ -320,7 +330,9 @@ def register_new(request):
     html_content = html.render({'township_name': township.name, 'applicant_name' : township.applicant_name, 'verification_link' : settings.CURRENT_DOMAIN + '/register/verify/' + township.verification_link})
 
     email_subject = 'New application! (' + township.application_id + ')'
-    email = EmailMultiAlternatives(email_subject, 'A new society has submitted an application', settings.DOMAIN_EMAIL, settings.ADMIN_EMAIL_IDS)
+    email_ids = settings.ADMIN_EMAIL_IDS
+    print(email_ids)
+    email = EmailMultiAlternatives(email_subject, 'A new society has submitted an application', settings.DOMAIN_EMAIL, email_ids)
     email.attach_alternative(html_content, "text/html")
     email.content_subtype = 'html'
     email.attach_file(details_path)
