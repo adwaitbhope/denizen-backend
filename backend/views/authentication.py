@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
+from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail, EmailMessage, EmailMultiAlternatives
 from django.template.loader import get_template
 from django.template import Context
@@ -217,6 +218,7 @@ def register_existing(request):
     wings_num = int(request.POST['wings_num'])
 
     resident_credentials = []
+    users = []
     for i in range(wings_num):
         wing_name = request.POST['wing_' + str(i) + '_name']
         wing_floors = request.POST['wing_' + str(i) + '_floors']
@@ -237,32 +239,33 @@ def register_existing(request):
                     apartment = str(floor + 1) + str(apt + 1).zfill(2)
 
                 resident_credentials.append({'apartment': wing_name + '/' + apartment, 'username': random_uname, 'password': random_pwd})
-                resident = User.objects.create_user(username=random_uname, password=random_pwd, township=township, type='resident', wing=wing, apartment=apartment)
-
+                users.append(User(username=random_uname, password=make_password(random_pwd, None, 'md5'), township=township, type='resident', wing=wing, apartment=apartment))
 
     amenities_num = int(request.POST['amenities_num'])
+    amenities = []
     for i in range(amenities_num):
         amenity_name = request.POST['amenity_' + str(i) + '_name']
         amenity_billing_rate = request.POST['amenity_' + str(i) + '_rate']
         amenity_amt_time_period = request.POST.get('amenity_' + str(i) + '_amt_time_period', 1)
         amenity_time_period = request.POST['amenity_' + str(i) + '_time_period']
-        amenity = Amenity.objects.create(township=township, name=amenity_name, billing_rate=amenity_billing_rate, amt_time_period=amenity_amt_time_period, time_period=amenity_time_period)
+        amenities.append(Amenity(township=township, name=amenity_name, billing_rate=amenity_billing_rate, amt_time_period=amenity_amt_time_period, time_period=amenity_time_period))
 
     admin_credentials = []
     for i in range(admin_ids):
         random_uname = random_string(8)
         random_pwd = random_string(8)
-
-        admin = User.objects.create_user(username=random_uname, password=random_pwd, township=township, type='admin')
         admin_credentials.append({'username':random_uname, 'password':random_pwd})
+        users.append(User(username=random_uname, password=make_password(random_pwd, None, 'md5'), township=township, type='admin'))
 
     security_credentials = []
     for i in range(security_ids):
         random_uname = random_string(8)
         random_pwd = random_string(8)
-
-        security = User.objects.create_user(username=random_uname, password=random_pwd, township=township, type='security')
         security_credentials.append({'username':random_uname, 'password':random_pwd})
+        users.append(User(username=random_uname, password=make_password(random_pwd, None, 'md5'), township=township, type='security'))
+
+    User.objects.bulk_create(users)
+    Amenity.objects.bulk_create(amenities)
 
     pdf_path = create_pdf(township, admin_credentials, security_credentials, resident_credentials)
     email = EmailMessage('Welcome to Township Manager', 'Thank you for registering with us.\nPFA the document containing login credentials for everyone.\n\nP.S. Username and password both must be changed upon first login.', settings.DOMAIN_EMAIL, [township.applicant_email])
@@ -330,9 +333,7 @@ def register_new(request):
     html_content = html.render({'township_name': township.name, 'applicant_name' : township.applicant_name, 'verification_link' : settings.CURRENT_DOMAIN + '/register/verify/' + township.verification_link})
 
     email_subject = 'New application! (' + township.application_id + ')'
-    email_ids = settings.ADMIN_EMAIL_IDS
-    print(email_ids)
-    email = EmailMultiAlternatives(email_subject, 'A new society has submitted an application', settings.DOMAIN_EMAIL, email_ids)
+    email = EmailMultiAlternatives(email_subject, 'A new society has submitted an application', settings.DOMAIN_EMAIL, settings.ADMIN_EMAIL_IDS)
     email.attach_alternative(html_content, "text/html")
     email.content_subtype = 'html'
     email.attach_file(details_path)
