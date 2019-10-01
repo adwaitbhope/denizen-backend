@@ -213,6 +213,8 @@ def register_existing(request):
     application_id = request.POST['application_id']
     township = Township.objects.get(application_id=application_id)
 
+    # TODO: Check if township is verified
+
     admin_ids = int(request.POST['admin_ids'])
     security_ids = int(request.POST['security_ids'])
     wings_num = int(request.POST['wings_num'])

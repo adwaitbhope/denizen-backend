@@ -12,5 +12,9 @@ urlpatterns = [
     path('reset_password/<str: reset_password_id>', views.reset_password, name='reset_password'),
 
     path('payment/paytm/initiate/', views.get_checksumhash, name='init_payment'),
-    path('payment/paytm/verify/', views.verify_checksumhash, name='verify_payment')
+    path('payment/paytm/verify/', views.verify_checksumhash, name='verify_payment'),
+
+    path('complaints/get/', views.get_complaints, name='get_complaints'),
+    path('complaints/new/', views.add_complaint, name='add_complaint'),
+    path('complaints/resolve/', views.mark_complaint_resolved, name='resolve_complaint'),
 ]

@@ -4,6 +4,11 @@ from django.utils import timezone
 
 # Create your models here.
 
+class Image(models.Model):
+    # image = models.Image
+    pass
+
+
 class Township(models.Model):
     application_id = models.CharField(max_length=10, unique=True, default='0')
     registration_timestamp = models.DateTimeField(default=timezone.now)
@@ -146,7 +151,12 @@ class Comment(models.Model):
 
 
 class Complaint(models.Model):
-    pass
+    resident = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    title = models.CharField(max_length=20, default=None, blank=True, null=True)
+    description = models.TextField(default=None, blank=True, null=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+    resolved = models.BooleanField(default=False)
 
 
 class Group(models.Model):
