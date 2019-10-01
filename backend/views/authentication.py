@@ -366,8 +366,12 @@ def verify_township(request, verification_link):
 
 @csrf_exempt
 def check_verification(request):
-    application_id = request.GET['application_id']
-    township = Township.objects.get(application_id=application_id)
+    application_id = request.GET.get('application_id', None)
+    email = request.GET.get('email', None)
+    try:
+        township = Township.objects.get(application_id=application_id, applicant_email=email)
+    except Township.DoesNotExist:
+        return JsonResponse([{'request_status': 0, 'status_description': 'Incorrect Application ID and Email combination'}], safe=False)
 
     data = {}
     data['name'] = township.name
@@ -375,7 +379,7 @@ def check_verification(request):
     data['address'] = township.address
     data['verified'] = township.verified
 
-    return JsonResponse([data], safe=False)
+    return JsonResponse([{'request_status': 1}, data], safe=False)
 
 
 @csrf_exempt
