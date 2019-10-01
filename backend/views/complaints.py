@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from ..models import *
 
-PAGINATION_SIZE = 3
+PAGINATION_SIZE = 15
 
 def authenticate_wrapper(request):
     username = request.POST['username']
