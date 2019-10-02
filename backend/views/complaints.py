@@ -5,11 +5,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from ..models import *
 
-
 PAGINATION_SIZE = 15
 
-
-def authenticate_wrapper(request):
+@csrf_exempt
+def add_complaint(request):
     username = request.POST['username']
     password = request.POST['password']
 
@@ -17,12 +16,6 @@ def authenticate_wrapper(request):
 
     if user is None:
         return JsonResponse([{'login_status': 0}], safe=False)
-    return user
-
-
-@csrf_exempt
-def add_complaint(request):
-    user = authenticate_wrapper(request)
 
     title = request.POST['title']
     description = request.POST['description']
@@ -33,7 +26,14 @@ def add_complaint(request):
 
 @csrf_exempt
 def get_complaints(request):
-    user = authenticate_wrapper(request)
+    username = request.POST['username']
+    password = request.POST['password']
+
+    user = authenticate(username=username, password=password)
+
+    if user is None:
+        return JsonResponse([{'login_status': 0}], safe=False)
+
     timestamp = request.POST.get('timestamp', timezone.now())
 
     if user.type == 'admin':
@@ -61,7 +61,13 @@ def get_complaints(request):
 
 @csrf_exempt
 def mark_complaint_resolved(request):
-    user = authenticate_wrapper(request)
+    username = request.POST['username']
+    password = request.POST['password']
+
+    user = authenticate(username=username, password=password)
+
+    if user is None:
+        return JsonResponse([{'login_status': 0}], safe=False)
 
     if user.type != 'admin':
         return JsonResponse([{'login_status': 1, 'authorization': 0}], safe=False)

@@ -5,11 +5,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from ..models import *
 
-
 PAGINATION_SIZE = 15
 
-
-def authenticate_wrapper(request):
+@csrf_exempt
+def get_notices(request):
     username = request.POST['username']
     password = request.POST['password']
 
@@ -17,12 +16,7 @@ def authenticate_wrapper(request):
 
     if user is None:
         return JsonResponse([{'login_status': 0}], safe=False)
-    return user
 
-
-@csrf_exempt
-def get_notices(request):
-    user = authenticate_wrapper(request)
     timestamp = request.POST.get('timestamp', timezone.now())
 
     if user.type == 'admin':
@@ -62,7 +56,13 @@ def get_notices(request):
 
 @csrf_exempt
 def add_notice(request):
-    user = authenticate_wrapper(request)
+    username = request.POST['username']
+    password = request.POST['password']
+
+    user = authenticate(username=username, password=password)
+
+    if user is None:
+        return JsonResponse([{'login_status': 0}], safe=False)
 
     if user.type != 'admin':
         return JsonResponse([{'login_status': 1, 'authorization': 0}], safe=False)
@@ -81,7 +81,13 @@ def add_notice(request):
 
 @csrf_exempt
 def add_comment_on_notice(request):
-    user = authenticate_wrapper(request)
+    username = request.POST['username']
+    password = request.POST['password']
+
+    user = authenticate(username=username, password=password)
+
+    if user is None:
+        return JsonResponse([{'login_status': 0}], safe=False)
 
     content = request.POST['content']
     notice_id = request.POST['notice_id']

@@ -205,7 +205,10 @@ def login(request):
         data['wing'] = user.wing.name
         data['apartment'] = user.apartment
 
-    return JsonResponse([{'login': 1}, data], safe=False)
+    wings = Wing.objects.filter(township=user.township)
+    wings_data = [{'wing_id': wing.id, 'wing_name': wing.name} for wing in wings]
+
+    return JsonResponse([{'login': 1}, data, wings_data], safe=False)
 
 
 @csrf_exempt
