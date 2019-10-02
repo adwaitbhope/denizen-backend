@@ -143,7 +143,12 @@ class Booking(models.Model):
 
 
 class Notice(models.Model):
-    pass
+    township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    wings = models.ManyToManyField(Wing)
+    title = models.CharField(max_length=40, default=None, blank=True, null=True)
+    description = models.TextField(default=None, blank=True, null=True)
+    posted_by = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    timestamp = models.DateTimeField(default=timezone.now)
 
 
 class Comment(models.Model):
@@ -153,7 +158,7 @@ class Comment(models.Model):
 class Complaint(models.Model):
     resident = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True)
     township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
-    title = models.CharField(max_length=20, default=None, blank=True, null=True)
+    title = models.CharField(max_length=40, default=None, blank=True, null=True)
     description = models.TextField(default=None, blank=True, null=True)
     timestamp = models.DateTimeField(default=timezone.now)
     resolved = models.BooleanField(default=False)
