@@ -30,8 +30,20 @@ def get_notices(request):
     else:
         notices = Notice.objects.prefetch_related().filter(wings=user.wing, timestamp__lt=timestamp).order_by('-timestamp')[:PAGINATION_SIZE]
 
+    def generate_comment_dict(comment):
+        data_dict = {}
+        data_dict['posted_by_first_name'] = comment.posted_by.first_name
+        data_dict['posted_by_last_name'] = comment.posted_by.last_name
+        data_dict['posted_by_wing'] = comment.posted_by.wing.name
+        data_dict['posted_by_apartment'] = comment.posted_by.apartment
+        data_dict['content'] = comment.content
+        data_dict['timestamp'] = comment.timestamp
+        return data_dict
+
     def generate_dict(notice):
         data_dict = {}
+        wings = notice.wings.all()
+        comments = Comment.objects.prefetch_related().filter(notice=notice).order_by('-timestamp')
         data_dict['notice_id'] = notice.id
         data_dict['posted_by_first_name'] = notice.posted_by.first_name
         data_dict['posted_by_last_name'] = notice.posted_by.last_name
@@ -39,9 +51,8 @@ def get_notices(request):
         data_dict['timestamp'] = notice.timestamp
         data_dict['title'] = notice.title
         data_dict['description'] = notice.description
-        if user.type == 'admin':
-            wings = notice.wings.all()
-            data_dict['wings'] = [wing.name for wing in wings]
+        data_dict['wings'] = [wing.name for wing in wings]
+        data_dict['comments'] = [generate_comment_dict(comment) for comment in comments]
         return data_dict
 
     data = [generate_dict(notice) for notice in notices]
@@ -65,4 +76,16 @@ def add_notice(request):
         wing = Wing.objects.get(pk=request.POST['wing_' + str(i) + '_id'])
         notice.wings.add(wing)
 
+    return JsonResponse([{'login_status': 1, 'request_status': 1}], safe=False)
+
+
+@csrf_exempt
+def add_comment_on_notice(request):
+    user = authenticate_wrapper(request)
+
+    content = request.POST['content']
+    notice_id = request.POST['notice_id']
+    notice = Notice.objects.get(pk=notice_id)
+
+    comment = Comment.objects.create(posted_by=user, content=content, notice=notice, timestamp=timezone.now())
     return JsonResponse([{'login_status': 1, 'request_status': 1}], safe=False)

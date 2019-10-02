@@ -152,7 +152,11 @@ class Notice(models.Model):
 
 
 class Comment(models.Model):
-    pass
+    posted_by = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    notice = models.ForeignKey(Notice, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    content = models.TextField(default=None, blank=True, null=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+
 
 
 class Complaint(models.Model):
