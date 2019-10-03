@@ -215,8 +215,8 @@ def login(request):
 @csrf_exempt
 def get_beams_token(request):
     print(request.headers)
-    username = request.POST['username']
-    password = request.POST['password']
+    username = request.headers['Username']
+    password = request.headers['Password']
 
     user = authenticate(request, username=username, password=password)
 
