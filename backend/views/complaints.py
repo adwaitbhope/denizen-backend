@@ -20,14 +20,14 @@ def add_complaint(request):
 
     title = request.POST['title']
     description = request.POST['description']
-    num_photos = request.POST['num_photos']
+    # num_photos = request.POST['num_photos']
 
     complaint = Complaint.objects.create(resident=user, township=user.township, title=title, description=description, timestamp=timezone.now(), resolved=False)
 
     beams_client = PushNotifications(instance_id=settings.BEAMS_INSTANCE_ID, secret_key=settings.BEAMS_SECRET_KEY)
 
     response = beams_client.publish_to_interests(
-      interests=[user.township_id + '-admins'],
+      interests=[str(user.township_id) + '-admins'],
       publish_body={
         'fcm': {
           'notification': {
