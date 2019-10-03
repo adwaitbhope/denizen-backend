@@ -11,6 +11,7 @@ from itertools import chain
 from fpdf import FPDF
 from ..models import *
 from django.conf import settings
+from pusher_push_notifications import PushNotifications
 import os, random, string
 
 
@@ -209,6 +210,21 @@ def login(request):
     wings_data = [{'wing_id': wing.id, 'wing_name': wing.name} for wing in wings]
 
     return JsonResponse([{'login': 1}, data, wings_data], safe=False)
+
+
+@csrf_exempt
+def get_beams_token(request):
+    username = request.POST['username']
+    password = request.POST['password']
+
+    user = authenticate(request, username=username, password=password)
+
+    if user is None:
+        return JsonResponse([{'login_status': 0}], safe=False)
+
+    beams_client = PushNotifications(instance_id='f464fd4f-7e2f-4f42-91cf-8a8ef1a67acb', secret_key='5DDA12A32501E7C8A20EA4297716D189E3AFAF54601C62F417B48BA6882DA951')
+    beams_token = beams_client.generate_token(user_id)
+    return JsonResponse(jsonify(beams_token), safe=False)
 
 
 @csrf_exempt

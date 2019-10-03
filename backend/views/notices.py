@@ -76,7 +76,7 @@ def add_notice(request):
         wing = Wing.objects.get(pk=request.POST['wing_' + str(i) + '_id'])
         notice.wings.add(wing)
 
-    return JsonResponse([{'login_status': 1, 'request_status': 1}], safe=False)
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, {'notice_id': notice.id}], safe=False)
 
 
 @csrf_exempt

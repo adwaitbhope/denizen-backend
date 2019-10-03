@@ -19,9 +19,10 @@ def add_complaint(request):
 
     title = request.POST['title']
     description = request.POST['description']
+    num_photos = request.POST['num_photos']
 
     complaint = Complaint.objects.create(resident=user, township=user.township, title=title, description=description, timestamp=timezone.now(), resolved=False)
-    return JsonResponse([{'login_status': 1, 'request_status': 1}], safe = False)
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, {'complaint_id': complaint.id}], safe = False)
 
 
 @csrf_exempt
