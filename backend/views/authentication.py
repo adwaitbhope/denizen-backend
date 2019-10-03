@@ -198,31 +198,18 @@ def login(request):
     data['email'] = user.email
     data['profile_updated'] = user.profile_updated
     data['township'] = user.township.name
+    data['township_id'] = user.township_id
 
     if user.type == 'admin':
         data['designation'] = user.designation
 
     if user.type == 'resident':
         data['wing'] = user.wing.name
+        data['wing_id'] = user.wing_id
         data['apartment'] = user.apartment
 
     wings = Wing.objects.filter(township=user.township)
     wings_data = [{'wing_id': wing.id, 'wing_name': wing.name} for wing in wings]
-
-    beams_client = PushNotifications(instance_id='f464fd4f-7e2f-4f42-91cf-8a8ef1a67acb', secret_key='5DDA12A32501E7C8A20EA4297716D189E3AFAF54601C62F417B48BA6882DA951')
-    response = beams_client.publish_to_users(
-      user_ids=['adwait'],
-      publish_body={
-        'fcm': {
-          'notification': {
-            'title': 'Hello',
-            'body': 'Adwait has sent a notification!',
-          },
-        },
-      },
-    )
-
-    print(response['publishId'])
 
     return JsonResponse([{'login': 1}, data, wings_data], safe=False)
 

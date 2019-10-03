@@ -3,6 +3,7 @@ from django.core.mail import send_mail, EmailMessage, EmailMultiAlternatives
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from pusher_push_notifications import PushNotifications
 from ..models import *
 
 PAGINATION_SIZE = 15
@@ -22,6 +23,21 @@ def add_complaint(request):
     num_photos = request.POST['num_photos']
 
     complaint = Complaint.objects.create(resident=user, township=user.township, title=title, description=description, timestamp=timezone.now(), resolved=False)
+
+    beams_client = PushNotifications(instance_id=settings.BEAMS_INSTANCE_ID, secret_key=settings.BEAMS_SECRET_KEY)
+
+    response = beams_client.publish_to_interests(
+      interests=[user.township_id + '-admins'],
+      publish_body={
+        'fcm': {
+          'notification': {
+            'title': 'New complaint!',
+            'body': user.first_name + ': ' + title,
+          },
+        },
+      },
+    )
+
     return JsonResponse([{'login_status': 1, 'request_status': 1}, {'complaint_id': complaint.id}], safe = False)
 
 
