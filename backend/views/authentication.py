@@ -209,12 +209,25 @@ def login(request):
     wings = Wing.objects.filter(township=user.township)
     wings_data = [{'wing_id': wing.id, 'wing_name': wing.name} for wing in wings]
 
+    response = beams_client.publish_to_users(
+      users=['adwait'],
+      publish_body={
+        'fcm': {
+          'notification': {
+            'title': 'Hello',
+            'body': 'Adwait has sent a notification!',
+          },
+        },
+      },
+    )
+
+    print(response['publishId'])
+
     return JsonResponse([{'login': 1}, data, wings_data], safe=False)
 
 
 @csrf_exempt
 def get_beams_token(request):
-    print(request.headers)
     username = request.headers['Username']
     password = request.headers['Password']
 
