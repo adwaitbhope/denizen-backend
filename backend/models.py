@@ -158,7 +158,6 @@ class Comment(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
 
 
-
 class Complaint(models.Model):
     resident = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True)
     township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)

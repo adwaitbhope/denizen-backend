@@ -54,9 +54,11 @@ def get_complaints(request):
     timestamp = request.POST.get('timestamp', timezone.now())
 
     if user.type == 'admin':
-        complaints = Complaint.objects.prefetch_related().filter(township=user.township, timestamp__lt=timestamp).order_by('-timestamp')[:PAGINATION_SIZE]
+        pending_complaints = Complaint.objects.prefetch_related().filter(township=user.township, timestamp__lt=timestamp, resolved=False).order_by('-timestamp')[:PAGINATION_SIZE]
+        resolved_complaints = Complaint.objects.prefetch_related().filter(township=user.township, timestamp__lt=timestamp, resolved=True).order_by('-timestamp')[:PAGINATION_SIZE]
     else:
-        complaints = Complaint.objects.prefetch_related().filter(resident=user, timestamp__lt=timestamp).order_by('-timestamp')[:PAGINATION_SIZE]
+        pending_complaints = Complaint.objects.prefetch_related().filter(resident=user, timestamp__lt=timestamp, resolved=False).order_by('-timestamp')[:PAGINATION_SIZE]
+        resolved_complaints = Complaint.objects.prefetch_related().filter(resident=user, timestamp__lt=timestamp, resolved=True).order_by('-timestamp')[:PAGINATION_SIZE]
 
     def generate_dict(complaint):
         data_dict = {}
@@ -71,9 +73,10 @@ def get_complaints(request):
         data_dict['timestamp'] = complaint.timestamp
         return data_dict
 
-    data = [generate_dict(complaint) for complaint in complaints]
+    pending = [generate_dict(complaint) for complaint in pending_complaints]
+    resolved = [generate_dict(complaint) for complaint in resolved_complaints]
 
-    return JsonResponse([{'login_status': 1, 'request_status': 1}, data], safe=False)
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, pending, resolved], safe=False)
 
 
 @csrf_exempt
