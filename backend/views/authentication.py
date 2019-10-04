@@ -406,6 +406,7 @@ def register_new(request):
 @csrf_exempt
 def register_existing_verify(request):
     application_id = request.POST['application_id']
+    township = Township.objects.get(application_id=application_id)
     paytm_params = {}
     paytm_params["MID"] = settings.PAYTM_MERCHANT_ID
     paytm_params["ORDERID"] = request.POST['ORDER_ID']
