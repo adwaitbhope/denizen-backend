@@ -242,8 +242,6 @@ def register_existing_initiate(request):
     application_id = request.POST['application_id']
     township = Township.objects.get(application_id=application_id)
 
-    print(request.POST)
-
     if not township.verified:
         return JsonResponse([{'request_status': 0, 'request_description': 'Township is not yet verified'}], safe=False)
 
@@ -254,10 +252,10 @@ def register_existing_initiate(request):
     resident_credentials = []
     users = []
     for i in range(wings_num):
-        wing_name = request.POST['wing_' + str(i) + '_name']
-        wing_floors = request.POST['wing_' + str(i) + '_floors']
-        wing_apts_per_floor = request.POST['wing_' + str(i) + '_apts_per_floor']
-        wing_naming_convention = request.POST['wing_' + str(i) + '_naming_convention']
+        wing_name = request.GET['wing_' + str(i) + '_name']
+        wing_floors = request.GET['wing_' + str(i) + '_floors']
+        wing_apts_per_floor = request.GET['wing_' + str(i) + '_apts_per_floor']
+        wing_naming_convention = request.GET['wing_' + str(i) + '_naming_convention']
 
         wing = Wing.objects.create(township=township, name=wing_name, floors=wing_floors, apts_per_floor=wing_apts_per_floor, naming_convention=wing_naming_convention)
 
@@ -278,11 +276,12 @@ def register_existing_initiate(request):
     amenities_num = int(request.POST['amenities_num'])
     amenities = []
     for i in range(amenities_num):
-        amenity_name = request.POST['amenity_' + str(i) + '_name']
-        amenity_billing_rate = request.POST['amenity_' + str(i) + '_rate']
-        amenity_amt_time_period = request.POST.get('amenity_' + str(i) + '_amt_time_period', 1)
-        amenity_time_period = request.POST['amenity_' + str(i) + '_time_period']
-        amenity_free_for_members = True if request.POST['amenity_' + str(i) + '_free_for_members'] == 'true' else False
+        amenity_name = request.GET['amenity_' + str(i) + '_name']
+        amenity_billing_rate = request.GET['amenity_' + str(i) + '_rate']
+        amenity_amt_time_period = request.GET.get('amenity_' + str(i) + '_amt_time_period', 1)
+        amenity_time_period = request.GET['amenity_' + str(i) + '_time_period']
+        print(request.GET['amenity_' + str(i) + '_free_for_members'])
+        amenity_free_for_members = True if request.GET['amenity_' + str(i) + '_free_for_members'] == 'true' else False
         amenities.append(Amenity(township=township, name=amenity_name, billing_rate=amenity_billing_rate, amt_time_period=amenity_amt_time_period, time_period=amenity_time_period))
 
     admin_credentials = []
