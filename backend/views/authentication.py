@@ -426,6 +426,7 @@ def register_existing_verify(request):
     if response['STATUS'] == 'TXN_SUCCESS':
         # TODO: Replace by constant defined in the class
         township_payment.paytm_transaction_status = 1
+        township_payment.save()
         pdf_path = application_id + '.pdf'
         email = EmailMessage('Welcome to Township Manager', 'Thank you for registering with us.\nPFA the document containing login credentials for everyone.\n\nP.S. Username and password both must be changed upon first login.', settings.DOMAIN_EMAIL, [township.applicant_email])
         email.content_subtype = 'html'
