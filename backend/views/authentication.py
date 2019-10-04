@@ -280,6 +280,7 @@ def register_existing_initiate(request):
         amenity_billing_rate = request.POST['amenity_' + str(i) + '_rate']
         amenity_amt_time_period = request.POST.get('amenity_' + str(i) + '_amt_time_period', 1)
         amenity_time_period = request.POST['amenity_' + str(i) + '_time_period']
+        amenity_free_for_members = True if request.POST['amenity_' + str(i) + '_free_for_members'] == 'true' else False
         amenities.append(Amenity(township=township, name=amenity_name, billing_rate=amenity_billing_rate, amt_time_period=amenity_amt_time_period, time_period=amenity_time_period))
 
     admin_credentials = []
