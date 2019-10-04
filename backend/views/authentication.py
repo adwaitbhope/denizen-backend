@@ -242,6 +242,8 @@ def register_existing_initiate(request):
     application_id = request.POST['application_id']
     township = Township.objects.get(application_id=application_id)
 
+    print(request.POST)
+
     if not township.verified:
         return JsonResponse([{'request_status': 0, 'request_description': 'Township is not yet verified'}], safe=False)
 
