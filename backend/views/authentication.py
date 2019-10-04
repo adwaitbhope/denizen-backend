@@ -9,10 +9,11 @@ from django.template import Context
 from django.utils import timezone
 from itertools import chain
 from fpdf import FPDF
-from ..models import *
-from django.conf import settings
 from pusher_push_notifications import PushNotifications
-import os, random, string
+from django.conf import settings
+from .paytm.Checksum import *
+from ..models import *
+import os, random, string, requests, json
 
 
 def create_pdf(township, admin_creds, security_creds, resident_creds):
@@ -68,7 +69,6 @@ def create_pdf(township, admin_creds, security_creds, resident_creds):
 
     path = township.application_id + '.pdf'
     pdf.output(path)
-    return path
 
 
 def create_details_pdf(township):
@@ -158,6 +158,14 @@ def get_new_paytm_cust_id():
     return random_str
 
 
+def get_new_order_id(length):
+    letters = string.ascii_letters + string.digits + '@' + '-' + '_' + '.'
+    random_str = ''.join([random.choice(letters) for _ in range(length)])
+    while (TownshipPayment.objects.filter(paytm_order_id=random_str).count() != 0) and (Payment.objects.filter(paytm_order_id=random_str).count() != 0):
+        random_str = ''.join(random.sample(letters, length))
+    return random_str
+
+
 def get_township_verification_link(length):
     letters = string.ascii_letters + string.digits
     random_str = ''.join(random.sample(letters, length))
@@ -230,11 +238,12 @@ def get_beams_token(request):
 
 
 @csrf_exempt
-def register_existing(request):
+def register_existing_initiate(request):
     application_id = request.POST['application_id']
     township = Township.objects.get(application_id=application_id)
 
-    # TODO: Check if township is verified
+    if not township.verified:
+        return JsonResponse([{'request_status': 0, 'request_description': 'Township is not yet verified'}], safe=False)
 
     admin_ids = int(request.POST['admin_ids'])
     security_ids = int(request.POST['security_ids'])
@@ -290,15 +299,35 @@ def register_existing(request):
     User.objects.bulk_create(users)
     Amenity.objects.bulk_create(amenities)
 
-    pdf_path = create_pdf(township, admin_credentials, security_credentials, resident_credentials)
-    email = EmailMessage('Welcome to Township Manager', 'Thank you for registering with us.\nPFA the document containing login credentials for everyone.\n\nP.S. Username and password both must be changed upon first login.', settings.DOMAIN_EMAIL, [township.applicant_email])
-    email.content_subtype = 'html'
-    email.attach_file(pdf_path)
-    email.send()
+    create_pdf(township, admin_credentials, security_credentials, resident_credentials)
 
-    os.remove(pdf_path)
+    paytm_params = {}
+    paytm_params['MID'] = settings.PAYTM_MERCHANT_ID
+    paytm_params['ORDER_ID'] = get_new_order_id(50)
+    paytm_params['CUST_ID'] = township.paytm_cust_id
+    paytm_params['TXN_AMOUNT'] = request.POST['TXN_AMOUNT']
+    paytm_params['CHANNEL_ID'] = request.POST['CHANNEL_ID']
+    paytm_params['WEBSITE'] =  request.POST['WEBSITE']
+    paytm_params['CALLBACK_URL'] = request.POST['CALLBACK_URL'] + paytm_params['ORDER_ID']
+    paytm_params['INDUSTRY_TYPE_ID'] = request.POST['INDUSTRY_TYPE_ID']
 
-    return JsonResponse([{'registration_status':1}, admin_credentials, security_credentials, resident_credentials], safe=False)
+    print(paytm_params)
+    checksum = generate_checksum(paytm_params, settings.PAYTM_MERCHANT_KEY)
+    paytm_params['CHECKSUMHASH'] = checksum
+
+    township_payment = TownshipPayment.objects.create()
+    township_payment.township = township
+    township_payment.amount = paytm_params['TXN_AMOUNT']
+    township_payment.timestamp = timezone.now()
+    # TODO: Replace by constant defined in the class
+    township_payment.mode = 3
+    township_payment.paytm_order_id = paytm_order_id=paytm_params['ORDER_ID']
+    # TODO: Replace by constant defined in the class
+    township_payment.paytm_transaction_status = 0
+    township_payment.paytm_checksumhash = checksum
+    township_payment.save()
+
+    return JsonResponse([{'request_status':1}, paytm_params], safe=False)
 
 
 @csrf_exempt
@@ -370,6 +399,38 @@ def register_new(request):
     client_email.send()
 
     return JsonResponse([{'registration_status' : 1, 'application_id' : application_id}], safe=False)
+
+
+@csrf_exempt
+def register_existing_verify(request):
+    application_id = request.POST['application_id']
+    paytm_params = {}
+    paytm_params["MID"] = settings.PAYTM_MERCHANT_ID
+    paytm_params["ORDERID"] = request.POST['ORDER_ID']
+    checksum = generate_checksum(paytm_params, settings.PAYTM_MERCHANT_KEY)
+    paytm_params["CHECKSUMHASH"] = checksum
+    post_data = json.dumps(paytm_params)
+
+    # for Staging
+    url = "https://securegw-stage.paytm.in/order/status"
+
+    # for Production
+    # url = "https://securegw.paytm.in/order/status"
+
+    response = requests.post(url, data = post_data, headers = {"Content-type": "application/json"}).json()
+    township_payment = TownshipPayment.objects.get(paytm_order_id=paytm_params['ORDERID'])
+
+    if response['STATUS'] == 'TXN_SUCCESS':
+        # TODO: Replace by constant defined in the class
+        township_payment.paytm_transaction_status = 1
+        pdf_path = application_id + '.pdf'
+        email = EmailMessage('Welcome to Township Manager', 'Thank you for registering with us.\nPFA the document containing login credentials for everyone.\n\nP.S. Username and password both must be changed upon first login.', settings.DOMAIN_EMAIL, [township.applicant_email])
+        email.content_subtype = 'html'
+        email.attach_file()
+        email.send()
+        os.remove(pdf_path)
+
+    return JsonResponse([response], safe=False)
 
 
 @csrf_exempt

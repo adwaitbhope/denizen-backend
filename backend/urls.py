@@ -6,19 +6,19 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('register/new/', views.register_new, name='register_new'),
     path('register/verify/<str:verification_link>/', views.verify_township, name='verify_township'),
-    path('register/existing/', views.register_existing, name='register_existing'),
     path('register/check_verification/', views.check_verification, name='check_verification'),
+
+    path('register/existing/initiate/', views.register_existing_initiate, name='register_existing'),
+    path('register/existing/verify/', views.register_existing_verify, name='verify_payment'),
+
     path('reset_password/', views.send_reset_password_link, name='send_reset_password_link'),
     path('reset_password/<str: reset_password_id>', views.reset_password, name='reset_password'),
 
-    path('payment/paytm/initiate/', views.get_checksumhash, name='init_payment'),
-    path('payment/paytm/verify/', views.verify_checksumhash, name='verify_payment'),
-
-    path('complaints/get/', views.get_complaints, name='get_complaints'),
+    path('complaints/', views.get_complaints, name='get_complaints'),
     path('complaints/new/', views.add_complaint, name='add_complaint'),
     path('complaints/resolve/', views.mark_complaint_resolved, name='resolve_complaint'),
 
-    path('notices/get/', views.get_notices, name='get_notices'),
+    path('notices/', views.get_notices, name='get_notices'),
     path('notices/new/', views.add_notice, name='add_notice'),
     path('notices/comments/new/', views.add_comment_on_notice, name='add_comment_on_notice'),
 
