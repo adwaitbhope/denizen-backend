@@ -429,7 +429,7 @@ def register_existing_verify(request):
         pdf_path = application_id + '.pdf'
         email = EmailMessage('Welcome to Township Manager', 'Thank you for registering with us.\nPFA the document containing login credentials for everyone.\n\nP.S. Username and password both must be changed upon first login.', settings.DOMAIN_EMAIL, [township.applicant_email])
         email.content_subtype = 'html'
-        email.attach_file()
+        email.attach_file(pdf_path)
         email.send()
         os.remove(pdf_path)
 
