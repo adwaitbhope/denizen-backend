@@ -493,5 +493,44 @@ def send_reset_password_link(request):
 
 
 @csrf_exempt
+def edit_profile(request):
+    username = request.POST['org_username']
+    password = request.POST['org_password']
+
+    user = authenticate(request, username=username, password=password)
+
+    if user is None:
+        return JsonResponse([{'login_status': 0}], safe=False)
+
+    changed_username = request.POST.get('username', username)
+    changed_password = request.POST.get('password', password)
+    email = request.POST.get('email', user.email)
+    phone = request.POST.get('phone', user.phone)
+    first_name = request.POST.get('first_name', user.first_name)
+    last_name = request.POST.get('last_name', user.last_name)
+    designation = request.POST.get('designation', user.designation)
+
+    user.username = changed_username
+    user.set_password(changed_password)
+    user.email = email
+    user.phone = phone
+    user.first_name = first_name
+    user.last_name = last_name
+    user.designation = designation
+    user.profile_updated = True
+    user.save()
+
+    return JsonResponse([{'login_status': 1, 'request_status': 1}], safe=False)
+
+
+@csrf_exempt
+def is_username_available(request, username):
+    if User.objects.filter(username=username).count() != 0:
+        return JsonResponse([{'request_status': 1, 'username_available': False}], safe=False)
+
+    return JsonResponse([{'request_status': 1, 'username_available': True}], safe=False)
+
+
+@csrf_exempt
 def reset_password(request, reset_password_id):
     pass
