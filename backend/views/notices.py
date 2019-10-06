@@ -96,4 +96,4 @@ def add_comment_on_notice(request):
     notice = Notice.objects.get(pk=notice_id)
 
     comment = Comment.objects.create(posted_by=user, content=content, notice=notice, timestamp=timezone.now())
-    return JsonResponse([{'login_status': 1, 'request_status': 1}], safe=False)
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, {'comment_id': comment.id, 'timestamp': comment.timestamp}], safe=False)
