@@ -26,6 +26,7 @@ def get_notices(request):
 
     def generate_comment_dict(comment):
         data_dict = {}
+        data_dict['posted_by_user_id'] = comment.posted_by_id
         data_dict['posted_by_first_name'] = comment.posted_by.first_name
         data_dict['posted_by_last_name'] = comment.posted_by.last_name
         data_dict['posted_by_wing'] = comment.posted_by.wing.name
