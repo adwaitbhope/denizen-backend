@@ -30,8 +30,11 @@ def get_notices(request):
         data_dict['posted_by_user_id'] = comment.posted_by_id
         data_dict['posted_by_first_name'] = comment.posted_by.first_name
         data_dict['posted_by_last_name'] = comment.posted_by.last_name
-        data_dict['posted_by_wing'] = comment.posted_by.wing.name
-        data_dict['posted_by_apartment'] = comment.posted_by.apartment
+        if comment.posted_by.type == 'resident':
+            data_dict['posted_by_wing'] = comment.posted_by.wing.name
+            data_dict['posted_by_apartment'] = comment.posted_by.apartment
+        else:
+            data_dict['posted_by_designation'] = comment.posted_by.designation
         data_dict['content'] = comment.content
         data_dict['timestamp'] = comment.timestamp
         return data_dict
