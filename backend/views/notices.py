@@ -46,7 +46,7 @@ def get_notices(request):
         data_dict['timestamp'] = notice.timestamp
         data_dict['title'] = notice.title
         data_dict['description'] = notice.description
-        data_dict['wings'] = [wing.name for wing in wings]
+        data_dict['wings'] = [{'wing_id': wing.id, 'wing_name': wing.name} for wing in wings]
         data_dict['comments'] = [generate_comment_dict(comment) for comment in comments]
         return data_dict
 
