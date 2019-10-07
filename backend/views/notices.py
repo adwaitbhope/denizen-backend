@@ -98,5 +98,21 @@ def add_comment_on_notice(request):
     notice_id = request.POST['notice_id']
     notice = Notice.objects.get(pk=notice_id)
 
+    def generate_comment_dict(comment):
+        data_dict = {}
+        data_dict['comment_id'] = comment.id
+        data_dict['notice_id'] = comment.notice_id
+        data_dict['posted_by_user_id'] = comment.posted_by_id
+        data_dict['posted_by_first_name'] = comment.posted_by.first_name
+        data_dict['posted_by_last_name'] = comment.posted_by.last_name
+        if comment.posted_by.type == 'resident':
+            data_dict['posted_by_wing'] = comment.posted_by.wing.name
+            data_dict['posted_by_apartment'] = comment.posted_by.apartment
+        else:
+            data_dict['posted_by_designation'] = comment.posted_by.designation
+        data_dict['content'] = comment.content
+        data_dict['timestamp'] = comment.timestamp
+        return data_dict
+
     comment = Comment.objects.create(posted_by=user, content=content, notice=notice, timestamp=timezone.now())
-    return JsonResponse([{'login_status': 1, 'request_status': 1}, {'comment_id': comment.id, 'timestamp': comment.timestamp}], safe=False)
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, generate_comment_dict(comment)], safe=False)
