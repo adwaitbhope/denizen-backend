@@ -81,7 +81,21 @@ def add_notice(request):
         wing = Wing.objects.get(pk=request.POST['wing_' + str(i) + '_id'])
         notice.wings.add(wing)
 
-    return JsonResponse([{'login_status': 1, 'request_status': 1}, {'notice_id': notice.id}], safe=False)
+    def generate_dict(notice):
+        data_dict = {}
+        data_dict['notice_id'] = notice.id
+        data_dict['posted_by_first_name'] = notice.posted_by.first_name
+        data_dict['posted_by_last_name'] = notice.posted_by.last_name
+        data_dict['posted_by_designation'] = notice.posted_by.designation
+        data_dict['timestamp'] = notice.timestamp
+        data_dict['title'] = notice.title
+        data_dict['description'] = notice.description
+        # data_dict['wings'] = [{'wing_id': wing.id, 'wing_name': wing.name} for wing in wings]
+        return data_dict
+
+    wings = notice.wings.all()
+
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, generate_dict(notice), [{'wing_id': wing.id} for wing in wings]], safe=False)
 
 
 @csrf_exempt
