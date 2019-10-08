@@ -78,7 +78,7 @@ def add_notice(request):
     notice = Notice.objects.create(title=title, description=description, timestamp=timezone.now(), posted_by=user, township=user.township)
 
     for i in range(int(num_wings)):
-        wing = Wing.objects.get(pk=request.POST['wing_' + str(i) + '_id'])
+        wing = Wing.objects.get(pk=request.GET['wing_' + str(i) + '_id'])
         notice.wings.add(wing)
 
     def generate_dict(notice):
