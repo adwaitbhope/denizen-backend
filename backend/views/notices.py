@@ -3,6 +3,7 @@ from django.core.mail import send_mail, EmailMessage, EmailMultiAlternatives
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from pusher_push_notifications import PushNotifications
 from ..models import *
 
 PAGINATION_SIZE = 15
