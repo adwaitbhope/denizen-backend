@@ -82,7 +82,7 @@ def add_notice(request):
 
     for i in range(int(num_wings)):
         wing = Wing.objects.get(pk=request.GET['wing_' + str(i) + '_id'])
-        beams_interests.append(str(user.township_id + '-' + str(wing.id) + '-residents'))
+        beams_interests.append(str(user.township_id) + '-' + str(wing.id) + '-residents')
         notice.wings.add(wing)
 
     beams_client = PushNotifications(instance_id=settings.BEAMS_INSTANCE_ID, secret_key=settings.BEAMS_SECRET_KEY)
