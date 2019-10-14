@@ -77,9 +77,26 @@ def add_notice(request):
     num_wings = request.POST['num_wings']
     notice = Notice.objects.create(title=title, description=description, timestamp=timezone.now(), posted_by=user, township=user.township)
 
+    beams_interests = [str(user.township_id) + '-admins']
+
     for i in range(int(num_wings)):
         wing = Wing.objects.get(pk=request.GET['wing_' + str(i) + '_id'])
+        beams_interests.append(str(user.township_id + '-' + str(wing.id) + '-residents'))
         notice.wings.add(wing)
+
+    beams_client = PushNotifications(instance_id=settings.BEAMS_INSTANCE_ID, secret_key=settings.BEAMS_SECRET_KEY)
+
+    response = beams_client.publish_to_interests(
+      interests=beams_interests,
+      publish_body={
+        'fcm': {
+          'notification': {
+            'title': 'New notice!',
+            'body': title + ': ' + description,
+          },
+        },
+      },
+    )
 
     def generate_dict(notice):
         data_dict = {}
