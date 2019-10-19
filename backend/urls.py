@@ -27,6 +27,7 @@ urlpatterns = [
     path('notices/new/', views.add_notice, name='add_notice'),
     path('notices/comments/new/', views.add_comment_on_notice, name='add_comment_on_notice'),
 
-    path('visitors/new')
+    path('visitors/new/', views.add_visitor_entry, name='add_visitor'),
+    path('visitors/get/', views.get_visitor_history, name='get_visitor_history'),
 
 ]
