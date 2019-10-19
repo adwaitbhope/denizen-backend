@@ -68,4 +68,5 @@ def get_visitor_history(request):
             data_dict['apartment'] = visitor.apartment.apartment
         return data_dict
 
-    return JsonResponse([generate_dict(visitor) for visitor in visitors], safe=False)
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, [generate_dict(visitor) for visitor in visitors]],
+                        safe=False)
