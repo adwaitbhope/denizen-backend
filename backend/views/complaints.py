@@ -8,6 +8,7 @@ from ..models import *
 
 PAGINATION_SIZE = 15
 
+
 @csrf_exempt
 def add_complaint(request):
     username = request.POST['username']
@@ -22,23 +23,24 @@ def add_complaint(request):
     description = request.POST['description']
     # num_photos = request.POST['num_photos']
 
-    complaint = Complaint.objects.create(resident=user, township=user.township, title=title, description=description, timestamp=timezone.now(), resolved=False)
+    complaint = Complaint.objects.create(resident=user, township=user.township, title=title, description=description,
+                                         timestamp=timezone.now(), resolved=False)
 
     beams_client = PushNotifications(instance_id=settings.BEAMS_INSTANCE_ID, secret_key=settings.BEAMS_SECRET_KEY)
 
     response = beams_client.publish_to_interests(
-      interests=[str(user.township_id) + '-admins'],
-      publish_body={
-        'fcm': {
-          'notification': {
-            'title': 'New complaint!',
-            'body': user.first_name + ': ' + title,
-          },
+        interests=[str(user.township_id) + '-admins'],
+        publish_body={
+            'fcm': {
+                'notification': {
+                    'title': 'New complaint!',
+                    'body': user.first_name + ': ' + title,
+                },
+            },
         },
-      },
     )
 
-    return JsonResponse([{'login_status': 1, 'request_status': 1}, {'complaint_id': complaint.id}], safe = False)
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, {'complaint_id': complaint.id}], safe=False)
 
 
 @csrf_exempt
@@ -54,11 +56,21 @@ def get_complaints(request):
     timestamp = request.POST.get('timestamp', timezone.now())
 
     if user.type == 'admin':
-        pending_complaints = Complaint.objects.prefetch_related().filter(township=user.township, timestamp__lt=timestamp, resolved=False).order_by('-timestamp')[:PAGINATION_SIZE]
-        resolved_complaints = Complaint.objects.prefetch_related().filter(township=user.township, timestamp__lt=timestamp, resolved=True).order_by('-timestamp')[:PAGINATION_SIZE]
+        pending_complaints = Complaint.objects.prefetch_related().filter(township=user.township,
+                                                                         timestamp__lt=timestamp,
+                                                                         resolved=False).order_by('-timestamp')[
+                             :PAGINATION_SIZE]
+        resolved_complaints = Complaint.objects.prefetch_related().filter(township=user.township,
+                                                                          timestamp__lt=timestamp,
+                                                                          resolved=True).order_by('-timestamp')[
+                              :PAGINATION_SIZE]
     else:
-        pending_complaints = Complaint.objects.prefetch_related().filter(resident=user, timestamp__lt=timestamp, resolved=False).order_by('-timestamp')[:PAGINATION_SIZE]
-        resolved_complaints = Complaint.objects.prefetch_related().filter(resident=user, timestamp__lt=timestamp, resolved=True).order_by('-timestamp')[:PAGINATION_SIZE]
+        pending_complaints = Complaint.objects.prefetch_related().filter(resident=user, timestamp__lt=timestamp,
+                                                                         resolved=False).order_by('-timestamp')[
+                             :PAGINATION_SIZE]
+        resolved_complaints = Complaint.objects.prefetch_related().filter(resident=user, timestamp__lt=timestamp,
+                                                                          resolved=True).order_by('-timestamp')[
+                              :PAGINATION_SIZE]
 
     def generate_dict(complaint):
         data_dict = {}
@@ -76,7 +88,14 @@ def get_complaints(request):
     pending = [generate_dict(complaint) for complaint in pending_complaints]
     resolved = [generate_dict(complaint) for complaint in resolved_complaints]
 
-    return JsonResponse([{'login_status': 1, 'request_status': 1}, pending, resolved], safe=False)
+    resolved_request = request.POST.get('resolved', None)
+
+    if resolved_request is None:
+        return JsonResponse([{'login_status': 1, 'request_status': 1}, pending, resolved], safe=False)
+    elif resolved_request:
+        return JsonResponse([{'login_status': 1, 'request_status': 1}, resolved], safe=False)
+    else:
+        return JsonResponse([{'login_status': 1, 'request_status': 1}, pending], safe=False)
 
 
 @csrf_exempt

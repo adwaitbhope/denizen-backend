@@ -8,6 +8,7 @@ from ..models import *
 
 PAGINATION_SIZE = 15
 
+
 @csrf_exempt
 def get_notices(request):
     username = request.POST['username']
@@ -21,9 +22,11 @@ def get_notices(request):
     timestamp = request.POST.get('timestamp', timezone.now())
 
     if user.type == 'admin':
-        notices = Notice.objects.prefetch_related().filter(township=user.township, timestamp__lt=timestamp).order_by('-timestamp')[:PAGINATION_SIZE]
+        notices = Notice.objects.prefetch_related().filter(township=user.township, timestamp__lt=timestamp).order_by(
+            '-timestamp')[:PAGINATION_SIZE]
     else:
-        notices = Notice.objects.prefetch_related().filter(wings=user.wing, timestamp__lt=timestamp).order_by('-timestamp')[:PAGINATION_SIZE]
+        notices = Notice.objects.prefetch_related().filter(wings=user.wing, timestamp__lt=timestamp).order_by(
+            '-timestamp')[:PAGINATION_SIZE]
 
     def generate_comment_dict(comment):
         data_dict = {}
@@ -76,7 +79,8 @@ def add_notice(request):
     title = request.POST['title']
     description = request.POST['description']
     num_wings = request.POST['num_wings']
-    notice = Notice.objects.create(title=title, description=description, timestamp=timezone.now(), posted_by=user, township=user.township)
+    notice = Notice.objects.create(title=title, description=description, timestamp=timezone.now(), posted_by=user,
+                                   township=user.township)
 
     beams_interests = [str(user.township_id) + '-admins']
 
@@ -88,15 +92,15 @@ def add_notice(request):
     beams_client = PushNotifications(instance_id=settings.BEAMS_INSTANCE_ID, secret_key=settings.BEAMS_SECRET_KEY)
 
     response = beams_client.publish_to_interests(
-      interests=beams_interests,
-      publish_body={
-        'fcm': {
-          'notification': {
-            'title': 'New notice!',
-            'body': title + ': ' + description,
-          },
+        interests=beams_interests,
+        publish_body={
+            'fcm': {
+                'notification': {
+                    'title': 'New notice!',
+                    'body': title + ': ' + description,
+                },
+            },
         },
-      },
     )
 
     def generate_dict(notice):
@@ -113,7 +117,9 @@ def add_notice(request):
 
     wings = notice.wings.all()
 
-    return JsonResponse([{'login_status': 1, 'request_status': 1}, generate_dict(notice), [{'wing_id': wing.id} for wing in wings]], safe=False)
+    return JsonResponse(
+        [{'login_status': 1, 'request_status': 1}, generate_dict(notice), [{'wing_id': wing.id} for wing in wings]],
+        safe=False)
 
 
 @csrf_exempt
