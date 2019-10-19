@@ -31,7 +31,7 @@ def add_visitor_entry(request):
     visitor_apartment = User.objects.get(wing=wing, apartment=apartment, township=user.township)
 
     Visitor.objects.create(first_name=first_name, last_name=last_name, apartment=visitor_apartment,
-                           in_timestame=timezone.now())
+                           township=user.township, in_timestamp=timezone.now())
 
     return JsonResponse([{'login_status': 1, 'request_status': 1}], safe=False)
 
