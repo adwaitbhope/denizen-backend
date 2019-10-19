@@ -27,4 +27,6 @@ urlpatterns = [
     path('notices/new/', views.add_notice, name='add_notice'),
     path('notices/comments/new/', views.add_comment_on_notice, name='add_comment_on_notice'),
 
+    path('visitors/new')
+
 ]

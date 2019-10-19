@@ -184,7 +184,11 @@ class SecurityPersonnel(models.Model):
 
 
 class Visitor(models.Model):
-    pass
+    first_name = models.CharField(max_length=25, default=None, blank=True, null=True)
+    last_name = models.CharField(max_length=25, default=None, blank=True, null=True)
+    apartment = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    in_timestamp = models.DateTimeField(default=timezone.now)
+    out_timestamp = models.DateTimeField(default=None, blank=True, null=True)
 
 
 class Entry(models.Model):
