@@ -200,7 +200,7 @@ def login(request):
     if user is None:
         return JsonResponse([{'login': 0}], safe=False)
 
-    data = {}
+    data = dict()
     data['username'] = user.username
     data['first_name'] = user.first_name
     data['last_name'] = user.last_name
@@ -220,9 +220,18 @@ def login(request):
         data['apartment'] = user.apartment
 
     wings = Wing.objects.filter(township=user.township)
-    wings_data = [{'wing_id': wing.id, 'wing_name': wing.name} for wing in wings]
+    apartments = User.objects.filter(township=user.township, type='resident')
 
-    return JsonResponse([{'login': 1}, data, wings_data], safe=False)
+    def generate_dict(wing):
+        wings_data = dict()
+        wings_data['wing_id'] = wing.id
+        wings_data['wing_name'] = wing.name
+        wing_apartments = filter(lambda apartment: apartment.wing == wing, apartments)
+        wings_data['apartments'] = [{'first_name': wing_apartment.first_name, 'last_name': wing_apartment.last_name,
+                                     'apartment': wing_apartment.apartment} for wing_apartment in wing_apartments]
+        return wings_data
+
+    return JsonResponse([{'login': 1}, data, [generate_dict(wing) for wing in wings]], safe=False)
 
 
 @csrf_exempt
