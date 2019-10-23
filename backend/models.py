@@ -177,11 +177,18 @@ class ServiceVendor(models.Model):
 
 
 class SecurityDesk(models.Model):
-    pass
+    name = models.CharField(max_length=30, default=None, blank=True, null=True)
+    township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
 
 
 class SecurityPersonnel(models.Model):
-    pass
+    first_name = models.CharField(max_length=30, default=None, blank=True, null=True)
+    last_name = models.CharField(max_length=30, default=None, blank=True, null=True)
+    phone = models.CharField(max_length=10, default=None, blank=True, null=True)
+    shift_days = models.IntegerField(default=None, blank=True, null=True)
+    shift_start = models.DateTimeField(default=timezone.now)
+    shift_end = models.DateTimeField(default=timezone.now)
+    township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
 
 
 class Visitor(models.Model):
