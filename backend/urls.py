@@ -14,7 +14,7 @@ urlpatterns = [
     path('register/existing/verify/', views.register_existing_verify, name='verify_payment'),
 
     path('profile/edit/', views.edit_profile, name='edit_profile'),
-    path('profile/check_username_availability/<str: username>', views.is_username_available, name='is_username_available'),
+    path('profile/check_username_availability/', views.is_username_available, name='is_username_available'),
 
     path('reset_password/', views.send_reset_password_link, name='send_reset_password_link'),
     path('reset_password/<str: reset_password_id>', views.reset_password, name='reset_password'),
