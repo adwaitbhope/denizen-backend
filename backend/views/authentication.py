@@ -550,7 +550,7 @@ def edit_profile(request):
     user.email = email
     user.phone = phone
     user.first_name = first_name
-    user.last_name = last_name
+    user.last_name = last_name()
     user.designation = designation
     user.profile_updated = True
     user.save()
@@ -559,7 +559,8 @@ def edit_profile(request):
 
 
 @csrf_exempt
-def is_username_available(request, username):
+def is_username_available(request):
+    username = request.GET['username']
     if User.objects.filter(username=username).count() != 0:
         return JsonResponse([{'request_status': 1, 'username_available': False}], safe=False)
 
