@@ -550,7 +550,7 @@ def edit_profile(request):
     user.email = email
     user.phone = phone
     user.first_name = first_name
-    user.last_name = last_name()
+    user.last_name = last_name
     user.designation = designation
     user.profile_updated = True
     user.save()
