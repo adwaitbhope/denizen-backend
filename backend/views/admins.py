@@ -88,7 +88,7 @@ def add_admins(request):
         random_uname = random_string(8)
         random_pwd = random_string(8)
         admin_creds.append({'username': random_uname, 'password': random_pwd})
-        admins.append(User.objects.create(username=random_uname, password=make_password(random_pwd, None, 'md5'),
+        admins.append(User(username=random_uname, password=make_password(random_pwd, None, 'md5'),
                                           township=user.township, type='admin'))
 
     User.objects.bulk_create(admins)
