@@ -24,8 +24,9 @@ def get_service_vendors(request):
     if user is None:
         return JsonResponse([{'login_status': 0}], safe=False)
 
-    vendors = ServiceVendor.objects.filter()
-    return JsonResponse([{'login_status': 1, 'request_status': 1}, [generate_dict(vendor) for vendor in vendors]], safe=False)
+    vendors = ServiceVendor.objects.filter(township=user.township)
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, [generate_dict(vendor) for vendor in vendors]],
+                        safe=False)
 
 
 @csrf_exempt
@@ -46,7 +47,7 @@ def add_new_service_vendor(request):
     phone = request.POST['phone']
     work = request.POST['work']
 
-    vendor = ServiceVendor.objects.create(first_name=first_name, last_name=last_name, phone=phone, work=work)
+    vendor = ServiceVendor.objects.create(first_name=first_name, last_name=last_name, phone=phone, work=work, township=user.township)
 
     return JsonResponse([{'login_status': 1, 'request_status': 1}, generate_dict(vendor)], safe=False)
 

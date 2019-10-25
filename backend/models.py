@@ -178,6 +178,7 @@ class Group(models.Model):
 
 
 class ServiceVendor(models.Model):
+    township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
     first_name = models.CharField(max_length=30, default=None, blank=True, null=True)
     last_name = models.CharField(max_length=30, default=None, blank=True, null=True)
     phone = models.CharField(max_length=10, default=None, blank=True, null=True)
@@ -194,8 +195,8 @@ class SecurityPersonnel(models.Model):
     last_name = models.CharField(max_length=30, default=None, blank=True, null=True)
     phone = models.CharField(max_length=10, default=None, blank=True, null=True)
     shift_days = models.IntegerField(default=None, blank=True, null=True)
-    shift_start = models.DateTimeField(default=timezone.now)
-    shift_end = models.DateTimeField(default=timezone.now)
+    shift_start = models.TimeField(default=timezone.now)
+    shift_end = models.TimeField(default=timezone.now)
     township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
 
 
