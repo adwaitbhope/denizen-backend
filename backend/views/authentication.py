@@ -1,19 +1,23 @@
-from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse, JsonResponse
+import json
+import os
+import random
+import requests
+import string
+from itertools import chain
+
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
-from django.core.mail import send_mail, EmailMessage, EmailMultiAlternatives
+from django.core.mail import EmailMessage, EmailMultiAlternatives
+from django.http import HttpResponse, JsonResponse
 from django.template.loader import get_template
-from django.template import Context
-from django.utils import timezone
-from itertools import chain
+from django.views.decorators.csrf import csrf_exempt
 from fpdf import FPDF
 from pusher_push_notifications import PushNotifications
-from django.conf import settings
+
 from .paytm.Checksum import *
 from ..models import *
-import os, random, string, requests, json
 
 
 def create_pdf(township, admin_creds, security_creds, resident_creds):
@@ -333,10 +337,7 @@ def register_existing_initiate(request):
     paytm_params['WEBSITE'] = request.POST['WEBSITE']
     paytm_params['CALLBACK_URL'] = request.POST['CALLBACK_URL'] + paytm_params['ORDER_ID']
     paytm_params['INDUSTRY_TYPE_ID'] = request.POST['INDUSTRY_TYPE_ID']
-
-    print(paytm_params)
-    checksum = generate_checksum(paytm_params, settings.PAYTM_MERCHANT_KEY)
-    paytm_params['CHECKSUMHASH'] = checksum
+    paytm_params['CHECKSUMHASH'] = generate_checksum(paytm_params, settings.PAYTM_MERCHANT_KEY)
 
     township_payment = TownshipPayment.objects.create()
     township_payment.township = township
@@ -347,7 +348,7 @@ def register_existing_initiate(request):
     township_payment.paytm_order_id = paytm_order_id = paytm_params['ORDER_ID']
     # TODO: Replace by constant defined in the class
     township_payment.paytm_transaction_status = 0
-    township_payment.paytm_checksumhash = checksum
+    township_payment.paytm_checksumhash = paytm_params['CHECKSUMHASH']
     township_payment.save()
 
     return JsonResponse([{'request_status': 1}, paytm_params], safe=False)

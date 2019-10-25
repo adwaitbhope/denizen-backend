@@ -31,6 +31,9 @@ class Township(models.Model):
     lat = models.FloatField()
     lng = models.FloatField()
 
+    audit_period_start = models.DateTimeField(default=None, blank=True, null=True)
+    audit_period_end = models.DateTimeField(default=None, blank=True, null=True)
+
     paytm_cust_id = models.CharField(max_length=64, default=None, blank=True, null=True)
 
 
@@ -106,6 +109,7 @@ class TownshipPayment(models.Model):
 
 class Payment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
     amount = models.FloatField(default=None, blank=True, null=True)
     timestamp = models.DateTimeField(default=timezone.now)
 
@@ -129,6 +133,7 @@ class Payment(models.Model):
     paytm_order_id = models.CharField(max_length=50, default=None, blank=True, null=True)
     paytm_checksumhash = models.CharField(max_length=108, default=None, blank=True, null=True)
 
+    # 0 ==> "Posted"
     # 1 ==> "Successful"
     # 2 ==> "Failed"
     # 3 ==> "Pending"
