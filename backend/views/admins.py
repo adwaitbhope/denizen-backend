@@ -46,6 +46,7 @@ def random_string(length):
 
 def generate_dict(admin):
     data_dict = dict()
+    data_dict['admin_id'] = admin.id
     data_dict['first_name'] = admin.first_name
     data_dict['last_name'] = admin.last_name
     data_dict['designation'] = admin.designation
