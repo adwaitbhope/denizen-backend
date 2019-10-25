@@ -70,7 +70,7 @@ def get_admins(request):
 
 
 @csrf_exempt
-def new_admin(request):
+def add_admins(request):
     username = request.POST['username']
     password = request.POST['password']
 
