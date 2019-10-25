@@ -169,11 +169,11 @@ def get_maintenance_payments(request):
     if user.type == 'admin':
         payments = Payment.objects.prefetch_related().filter(township=user.township, sub_type=1,
                                                              timestamp__lt=timestamp).order_by('-timestamp')[
-                   :[PAGINATION_SIZE]]
+                   :PAGINATION_SIZE]
     else:
         payments = Payment.objects.prefetch_related().filter(township=user.township, user=user, sub_type=1,
                                                              timestamp__lt=timestamp).order_by('-timestamp')[
-                   :[PAGINATION_SIZE]]
+                   :PAGINATION_SIZE]
 
     def generate_dict(payment):
         data_dict = dict()
