@@ -191,5 +191,5 @@ def get_maintenance_payments(request):
         data_dict['timestamp'] = payment.timestamp
         return data_dict
 
-    return JsonResponse([{'login_status': 1, 'request_status': 0}, [generate_dict(payment) for payment in payments]],
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, [generate_dict(payment) for payment in payments]],
                         safe=False)
