@@ -64,11 +64,11 @@ def edit_service_vendor(request):
     if user.type != 'admin':
         return JsonResponse([{'login_status': 1, 'request_status': 0}], safe=False)
 
-    vendor = ServiceVendor.objects.get(pk=request.POST['id'])
-    vendor.first_name = request.POST['first_name']
-    vendor.last_name = request.POST['last_name']
-    vendor.phone = request.POST['phone']
-    vendor.work = request.POST['work']
+    vendor = ServiceVendor.objects.get(pk=request.POST['vendor_id'])
+    vendor.first_name = request.POST.get('first_name', vendor.first_name)
+    vendor.last_name = request.POST.get('last_name', vendor.last_name)
+    vendor.phone = request.POST.get('phone', vendor.phone)
+    vendor.work = request.POST.get('work', vendor.work)
     vendor.save()
 
     return JsonResponse([{'login_status': 1, 'request_status': 1}, generate_dict(vendor)], safe=False)

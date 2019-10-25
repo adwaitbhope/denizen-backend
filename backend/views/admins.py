@@ -84,7 +84,7 @@ def add_admins(request):
 
     admins = []
     admin_creds = []
-    for i in range(request.POST['num_admins']):
+    for i in range(int(request.POST['num_admins'])):
         random_uname = random_string(8)
         random_pwd = random_string(8)
         admin_creds.append({'username': random_uname, 'password': random_pwd})
