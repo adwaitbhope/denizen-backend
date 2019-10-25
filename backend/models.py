@@ -178,7 +178,10 @@ class Group(models.Model):
 
 
 class ServiceVendor(models.Model):
-    pass
+    first_name = models.CharField(max_length=30, default=None, blank=True, null=True)
+    last_name = models.CharField(max_length=30, default=None, blank=True, null=True)
+    phone = models.CharField(max_length=10, default=None, blank=True, null=True)
+    work = models.CharField(max_length=30, default=None, blank=True, null=True)
 
 
 class SecurityDesk(models.Model):

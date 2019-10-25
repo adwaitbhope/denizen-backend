@@ -1,4 +1,4 @@
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import JsonResponse
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
@@ -138,7 +138,7 @@ def add_resident_maintenance_by_admin(request):
 
     def generate_dict():
         data_dict = dict()
-        data_dict['id'] = payment.id
+        data_dict['payment_id'] = payment.id
         data_dict['amount'] = payment.amount
         data_dict['wing_id'] = payment.user.wing_id
         data_dict['apartment'] = payment.user.apartment
