@@ -292,7 +292,7 @@ def register_existing_initiate(request):
                     {'apartment': wing_name + '/' + apartment, 'username': random_uname, 'password': random_pwd})
                 users.append(
                     User(username=random_uname, password=make_password(random_pwd, None, 'md5'), township=township,
-                         type='resident', wing=wing, apartment=apartment))
+                         type='resident', wing=wing, apartment=apartment, paytm_cust_id=get_new_paytm_cust_id()))
 
     amenities_num = int(request.POST['amenities_num'])
     amenities = []

@@ -61,6 +61,7 @@ def pay_maintenance_initiate(request):
     payment.paytm_checksumhash = paytm_params['CHECKSUMHASH']
     # TODO: Replace by constant defined in the class
     payment.paytm_transaction_status = 0
+    payment.save()
 
     return JsonResponse([{'request_status': 1}, paytm_params], safe=False)
 
