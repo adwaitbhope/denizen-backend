@@ -89,10 +89,10 @@ def add_admins(request):
         random_uname = random_string(8)
         random_pwd = random_string(8)
         admin_creds.append({'username': random_uname, 'password': random_pwd})
-        admins.append(User(username=random_uname, password=make_password(random_pwd, None, 'md5'),
-                                          township=user.township, type='admin'))
+        admin = User.objects.create(username=random_uname, password=make_password(random_pwd, None, 'md5'),
+                                          township=user.township, type='admin')
+        admins.append(admin)
 
-    User.objects.bulk_create(admins)
     pdf_path = create_pdf(user.township, admin_creds)
 
     email = EmailMessage(f'{settings.APP_NAME} - Admin credentials',
