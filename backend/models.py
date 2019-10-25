@@ -53,14 +53,14 @@ class User(AbstractUser):
     reset_password_link = models.CharField(max_length=15, default=None, blank=True, null=True)
     reset_password_request_timestamp = models.DateTimeField(default=None, blank=True, null=True)
 
-    phone = models.CharField(max_length=10, default=None, blank=True, null=True)
+    phone = models.CharField(max_length=10, default='')
     profile_updated = models.BooleanField(default=False)
 
     # Type of user, values can be 'admin', 'resident' or 'security'
     type = models.CharField(max_length=10, default='resident')
 
     # Only applicable to type 'admin'
-    designation = models.CharField(max_length=30, default=None, blank=True, null=True)
+    designation = models.CharField(max_length=30, default='')
 
     township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
 
