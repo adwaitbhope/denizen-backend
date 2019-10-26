@@ -39,6 +39,7 @@ urlpatterns = [
     path('service_vendors/', views.get_service_vendors, name='get_service_vendors'),
     path('service_vendors/new/', views.add_new_service_vendor, name='add_service_vendor'),
     path('service_vendors/edit/', views.edit_service_vendor, name='edit_service_vendor'),
+    path('service_vendors/delete/', views.delete_service_vendor, name='delete_service_vendor'),
 
     path('admins/', views.get_admins, name='get_admins'),
     path('admins/new/', views.add_admins, name='add_admins')

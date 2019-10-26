@@ -73,3 +73,22 @@ def edit_service_vendor(request):
     vendor.save()
 
     return JsonResponse([{'login_status': 1, 'request_status': 1}, generate_dict(vendor)], safe=False)
+
+
+@csrf_exempt
+def delete_service_vendor(request):
+    username = request.POST['username']
+    password = request.POST['password']
+
+    user = authenticate(request, username=username, password=password)
+
+    if user is None:
+        return JsonResponse([{'login_status': 0}], safe=False)
+
+    if user.type != 'admin':
+        return JsonResponse([{'login_status': 1, 'request_status': 0}], safe=False)
+
+    vendor = ServiceVendor.objects.get(pk=request.POST['vendor_id'])
+    vendor.delete()
+
+    return JsonResponse([{'login_status': 1, 'request_status': 1}], safe=False)

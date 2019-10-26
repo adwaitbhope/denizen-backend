@@ -14,6 +14,26 @@ import json
 PAGINATION_SIZE = 15
 
 
+def generate_dict(payment):
+    data_dict = dict()
+    data_dict['id'] = payment.id
+    data_dict['amount'] = payment.amount
+    data_dict['wing_id'] = payment.user.wing_id
+    data_dict['apartment'] = payment.user.apartment
+    if payment.mode == 1:
+        data_dict['mode'] = 'Cash'
+    elif payment.mode == 2:
+        data_dict['mode'] = 'Cheque'
+        data_dict['cheque_no'] = payment.cheque_no
+    else:
+        data_dict['mode'] = 'PayTm'
+        data_dict['paytm_order_id'] = payment.paytm_order_id
+    data_dict['first_name'] = payment.user.first_name
+    data_dict['last_name'] = payment.user.last_name
+    data_dict['timestamp'] = payment.timestamp
+    return data_dict
+
+
 def get_new_order_id(length):
     letters = string.ascii_letters + string.digits + '@' + '-' + '_' + '.'
     random_str = ''.join([random.choice(letters) for _ in range(length)])
@@ -105,7 +125,7 @@ def pay_maintenance_verify(request):
             fail_silently=False,
         )
 
-    return JsonResponse([response], safe=False)
+    return JsonResponse([response, generate_dict(payment)], safe=False)
 
 
 @csrf_exempt
@@ -136,23 +156,7 @@ def add_resident_maintenance_by_admin(request):
         payment.cheque_no = str(request.POST['cheque_no'])
     payment.save()
 
-    def generate_dict():
-        data_dict = dict()
-        data_dict['payment_id'] = payment.id
-        data_dict['amount'] = payment.amount
-        data_dict['wing_id'] = payment.user.wing_id
-        data_dict['apartment'] = payment.user.apartment
-        if payment.mode == 1:
-            data_dict['mode'] = 'Cash'
-        elif payment.mode == 2:
-            data_dict['mode'] = 'Cheque'
-            data_dict['cheque_no'] = payment.cheque_no
-        data_dict['first_name'] = payment.user.first_name
-        data_dict['last_name'] = payment.user.last_name
-        data_dict['timestamp'] = payment.timestamp
-        return data_dict
-
-    return JsonResponse([{'login_status': 1, 'request_status': 1}, generate_dict()], safe=False)
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, generate_dict(payment)], safe=False)
 
 
 @csrf_exempt
@@ -175,22 +179,6 @@ def get_maintenance_payments(request):
         payments = Payment.objects.prefetch_related().filter(township=user.township, user=user, sub_type=1,
                                                              timestamp__lt=timestamp).order_by('-timestamp')[
                    :PAGINATION_SIZE]
-
-    def generate_dict(payment):
-        data_dict = dict()
-        data_dict['id'] = payment.id
-        data_dict['amount'] = payment.amount
-        data_dict['wing_id'] = payment.user.wing_id
-        data_dict['apartment'] = payment.user.apartment
-        if payment.mode == 1:
-            data_dict['mode'] = 'Cash'
-        elif payment.mode == 2:
-            data_dict['mode'] = 'Cheque'
-            data_dict['cheque_no'] = payment.cheque_no
-        data_dict['first_name'] = payment.user.first_name
-        data_dict['last_name'] = payment.user.last_name
-        data_dict['timestamp'] = payment.timestamp
-        return data_dict
 
     return JsonResponse([{'login_status': 1, 'request_status': 1}, [generate_dict(payment) for payment in payments]],
                         safe=False)
