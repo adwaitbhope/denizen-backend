@@ -205,6 +205,7 @@ def login(request):
         return JsonResponse([{'login': 0}], safe=False)
 
     data = dict()
+    data['user_id'] = user.id
     data['username'] = user.username
     data['first_name'] = user.first_name
     data['last_name'] = user.last_name
