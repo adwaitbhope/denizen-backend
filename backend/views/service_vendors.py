@@ -9,7 +9,7 @@ def generate_dict(vendor):
     data_dict['vendor_id'] = vendor.id
     data_dict['first_name'] = vendor.first_name
     data_dict['last_name'] = vendor.last_name
-    data_dict['phone'] = vendor.last_name
+    data_dict['phone'] = vendor.phone
     data_dict['work'] = vendor.work
     return data_dict
 
