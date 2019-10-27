@@ -16,7 +16,7 @@ PAGINATION_SIZE = 15
 
 def generate_dict(payment):
     data_dict = dict()
-    data_dict['id'] = payment.id
+    data_dict['payment_id'] = payment.id
     data_dict['amount'] = payment.amount
     data_dict['wing_id'] = payment.user.wing_id
     data_dict['apartment'] = payment.user.apartment
