@@ -11,8 +11,9 @@ def generate_dict(user):
     data_dict['first_name'] = user.first_name
     data_dict['last_name'] = user.last_name
     data_dict['phone'] = user.phone
-    data_dict['wing_id'] = user.wing_id
-    data_dict['apartment'] = user.apartment
+    if user.type == 'resident':
+        data_dict['wing_id'] = user.wing_id
+        data_dict['apartment'] = user.apartment
     return data_dict
 
 
@@ -34,4 +35,5 @@ def get_users(request):
     security_list = [generate_dict(security_desk) for security_desk in security_desks]
     residents_list = [generate_dict(resident) for resident in residents]
 
-    return JsonResponse([{'login_status': 1, 'request_status': 1}, admins_list, security_list, residents_list], safe=False)
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, admins_list, security_list, residents_list],
+                        safe=False)
