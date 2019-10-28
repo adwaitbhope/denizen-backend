@@ -250,10 +250,11 @@ def get_membership_payments(request):
     if user is None:
         return JsonResponse([{'login_status': 0}], safe=False)
 
-    if user.type != 'admin':
-        return JsonResponse([{'login_status': 1, 'request_status': 0}], safe=False)
+    if user.type == 'admin':
+        payments = Payment.objects.filter(township=user.township, type=1, sub_type=2).order_by('-timestamp')
 
-    payments = Payment.objects.filter(township=user.township, type=1, sub_type=2).order_by('-timestamp')
+    else:
+        payments = Payment.objects.filter(user=user, type=1, sub_type=2).order_by('-timestamp')
 
     return JsonResponse([{'login_status': 1, 'request_status': 1},
                          [generate_membership_payments_dict(payment) for payment in payments]], safe=False)
