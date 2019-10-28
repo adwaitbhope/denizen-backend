@@ -44,9 +44,9 @@ def get_available_slots(request):
         return JsonResponse([{'login_status': 0}], safe=False)
 
     amenity_id = request.POST['amenity_id']
-    day = request.POST['day']
-    month = request.POST['month']
-    year = request.POST['year']
+    day = int(request.POST['day'])
+    month = int(request.POST['month'])
+    year = int(request.POST['year'])
 
     first_slot_start = datetime.datetime(year, month, day, 8, tzinfo=pytz.UTC).astimezone(INDIA)
     last_slot_end = datetime.datetime(year, month, day, 22, tzinfo=pytz.UTC).astimezone(INDIA)
