@@ -5,8 +5,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from pusher_push_notifications import PushNotifications
 from ..models import *
+import pytz
+import datetime
 
 PAGINATION_SIZE = 30
+INDIA = pytz.timezone('Asia/Calcutta')
 
 
 @csrf_exempt
@@ -61,8 +64,9 @@ def get_visitor_history(request):
         data_dict = dict()
         data_dict['first_name'] = visitor.first_name
         data_dict['last_name'] = visitor.last_name
-        data_dict['in_timestamp'] = str(visitor.in_timestamp)
-        data_dict['out_timestamp'] = str(visitor.out_timestamp)
+        data_dict['in_timestamp'] = str(visitor.in_timestamp.astimezone(INDIA))
+        if visitor.out_timestamp is not None:
+            data_dict['out_timestamp'] = str(visitor.out_timestamp.astimezone(INDIA))
         if user.type != 'resident':
             data_dict['wing'] = visitor.apartment.wing_id
             data_dict['apartment'] = visitor.apartment.apartment
