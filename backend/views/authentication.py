@@ -454,7 +454,7 @@ def register_existing_verify(request):
     response = requests.post(url, data=post_data, headers={"Content-type": "application/json"}).json()
     township_payment = TownshipPayment.objects.get(paytm_order_id=paytm_params['ORDERID'])
 
-    if response['STATUS'] == 'TXN_SUCCESS':
+    if response['STATUS'] == 'TXN_SUCCESS' or response['STATUS'] == 'TXN_FAILURE':
         # TODO: Replace by constant defined in the class
         township_payment.paytm_transaction_status = 1
         township_payment.save()

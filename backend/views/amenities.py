@@ -5,6 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 import datetime
 from ..models import *
 
+HOUR_START = 8
+HOUR_END = 22
 INDIA = pytz.timezone('Asia/Calcutta')
 
 
@@ -48,16 +50,16 @@ def get_available_slots(request):
     month = int(request.POST['month'])
     year = int(request.POST['year'])
 
-    first_slot_start = datetime.datetime(year, month, day, 8, tzinfo=pytz.UTC).astimezone(INDIA)
-    last_slot_end = datetime.datetime(year, month, day, 22, tzinfo=pytz.UTC).astimezone(INDIA)
+    first_slot_start = INDIA.localize(datetime.datetime(year, month, day, HOUR_START))
+    last_slot_end = INDIA.localize(datetime.datetime(year, month, day, HOUR_END))
 
     bookings = Booking.objects.filter(amenity_id=amenity_id, billing_from__gte=first_slot_start,
                                       billing_to__lte=last_slot_end).order_by('billing_from')
 
     slots = []
-    hour = 8
-    while hour < 22:
-        slot = datetime.datetime(year, month, day, hour, tzinfo=pytz.UTC).astimezone(INDIA)
+    hour = HOUR_START
+    while hour < HOUR_END:
+        slot = INDIA.localize(datetime.datetime(year, month, day, hour))
         slots.append(slot)
         hour += 1
 
@@ -65,7 +67,14 @@ def get_available_slots(request):
         if booking.billing_from.astimezone(INDIA) in slots:
             slots.remove(booking.billing_from.astimezone(INDIA))
 
-    return JsonResponse([{'login_status': 1}], safe=False)
+    def generate_slot_dict(s):
+        data = dict()
+        data['billing_from'] = s
+        data['billing_to'] = INDIA.localize(datetime.datetime(s.year, s.month, s.day, s.hour + 1))
+        return data
+
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, [generate_slot_dict(slot) for slot in slots]],
+                        safe=False)
 
 
 @csrf_exempt
@@ -99,9 +108,26 @@ def book_amenity(request):
         return JsonResponse([{'login_status': 1, 'request_status': 0}], safe=False)
 
     amenity_id = request.POST['amenity_id']
-    billing_from = request.POST['billing_from']
-    billing_to = request.POST['billing_to']
-    return JsonResponse([{'login_status': 0}], safe=False)
+    day = int(request.POST['day'])
+    month = int(request.POST['month'])
+    year = int(request.POST['year'])
+    hour = int(request.POST['hour'])
+
+    booking = Booking.objects.create()
+    booking.user = user
+    booking.amenity_id = amenity_id
+    booking.billing_from = INDIA.localize(datetime.datetime(year, month, day, hour))
+    booking.billing_to = INDIA.localize(datetime.datetime(year, month, day, hour + 1))
+    booking.save()
+
+    def generate_booking_dict():
+        data = dict()
+        data['amenity_id'] = amenity_id
+        data['booking_from'] = booking.billing_from.astimezone(INDIA)
+        data['booking_to'] = booking.billing_to.astimezone(INDIA)
+        return data
+
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, generate_booking_dict()], safe=False)
 
 
 @csrf_exempt
