@@ -70,6 +70,8 @@ def generate_membership_payments_dict(payment):
     data['last_name'] = user.last_name
     data['wing_id'] = user.wing_id
     data['apartment'] = user.apartment
+    data['timestamp'] = INDIA.localize(payment.timestamp)
+    data['valid_thru_timestamp'] = INDIA.localize(payment.timestamp + datetime.timedelta(days=364))
     data['amount'] = payment.amount
     if payment.mode == Payment.CASH:
         data['mode'] = 'Cash'
