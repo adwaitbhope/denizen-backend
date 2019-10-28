@@ -93,17 +93,17 @@ class TownshipPayment(models.Model):
     amount = models.FloatField(default=None, blank=True, null=True)
     timestamp = models.DateTimeField(default=timezone.now)
 
-    # 1 ==> "Cash"
-    # 2 ==> "Cheque"
-    # 3 ==> "PayTM"
+    MODE_CASH = 1
+    MODE_CHEQUE = 2
+    MODE_PAYTM = 3
     mode = models.IntegerField(default=None, blank=True, null=True)
     paytm_order_id = models.CharField(max_length=50, default=None, blank=True, null=True)
     paytm_checksumhash = models.CharField(max_length=108, default=None, blank=True, null=True)
 
-    # 0 ==> "Posted"
-    # 1 ==> "Successful"
-    # 2 ==> "Failed"
-    # 3 ==> "Pending"
+    TXN_POSTED = 0
+    TXN_SUCCESSFUL = 1
+    TXN_FAILED = 2
+    TXN_PENDING = 3
     paytm_transaction_status = models.IntegerField(default=None, blank=True, null=True)
 
 
@@ -113,19 +113,20 @@ class Payment(models.Model):
     amount = models.FloatField(default=None, blank=True, null=True)
     timestamp = models.DateTimeField(default=timezone.now)
 
-    # 1 ==> "Cash"
-    # 2 ==> "Cheque"
-    # 3 ==> "PayTM"
+    MODE_CASH = 1
+    MODE_CHEQUE = 2
+    MODE_PAYTM = 3
     mode = models.IntegerField(default=None, blank=True, null=True)
 
-    # 1 ==> "Credit" (w.r.t. township's account)
-    # 2 ==> "Debit"
+    # (w.r.t. township's account)
+    TYPE_CREDIT = 1
+    TYPE_DEBIT = 2
     type = models.IntegerField(default=None, blank=True, null=True)
 
-    # 1 ==> "Maintenance"
-    # 2 ==> "Membership"
-    # 3 ==> "Amenity"
-    # 0 ==> "Other"
+    SUB_TYPE_MAINTENANCE = 1
+    SUB_TYPE_MEMBERSHIP = 2
+    SUB_TYPE_AMENITY = 3
+    SUB_TYPE_OTHER = 0
     sub_type = models.IntegerField(default=None, blank=True, null=True)
     description = models.TextField(default=None, blank=True, null=True)
 
@@ -133,16 +134,17 @@ class Payment(models.Model):
     paytm_order_id = models.CharField(max_length=50, default=None, blank=True, null=True)
     paytm_checksumhash = models.CharField(max_length=108, default=None, blank=True, null=True)
 
-    # 0 ==> "Posted"
-    # 1 ==> "Successful"
-    # 2 ==> "Failed"
-    # 3 ==> "Pending"
+    TXN_POSTED = 0
+    TXN_SUCCESSFUL = 1
+    TXN_FAILED = 2
+    TXN_PENDING = 3
     paytm_transaction_status = models.IntegerField(default=None, blank=True, null=True)
 
 
 class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True)
     amenity = models.ForeignKey(Amenity, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
     billing_from = models.DateTimeField(default=None, blank=True, null=True)
     billing_to = models.DateTimeField(default=None, blank=True, null=True)
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE, default=None, blank=True, null=True)

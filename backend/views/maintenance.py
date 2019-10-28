@@ -20,9 +20,9 @@ def generate_dict(payment):
     data_dict['amount'] = payment.amount
     data_dict['wing_id'] = payment.user.wing_id
     data_dict['apartment'] = payment.user.apartment
-    if payment.mode == 1:
+    if payment.mode == Payment.MODE_CASH:
         data_dict['mode'] = 'Cash'
-    elif payment.mode == 2:
+    elif payment.mode == Payment.MODE_CHEQUE:
         data_dict['mode'] = 'Cheque'
         data_dict['cheque_no'] = payment.cheque_no
     else:
@@ -72,18 +72,16 @@ def pay_maintenance_initiate(request):
     payment.township = user.township
     payment.amount = paytm_params['TXN_AMOUNT']
     payment.timestamp = timezone.now()
-    # TODO: Replace by constant defined in the class
-    payment.mode = 3
-    payment.type = 1
-    payment.sub_type = 1
+    payment.mode = Payment.MODE_PAYTM
+    payment.type = Payment.TYPE_CREDIT
+    payment.sub_type = Payment.SUB_TYPE_MAINTENANCE
     payment.description = request.POST.get('description', None)
     payment.paytm_order_id = paytm_params['ORDER_ID']
     payment.paytm_checksumhash = paytm_params['CHECKSUMHASH']
-    # TODO: Replace by constant defined in the class
-    payment.paytm_transaction_status = 0
+    payment.paytm_transaction_status = Payment.TXN_POSTED
     payment.save()
 
-    return JsonResponse([{'request_status': 1}, paytm_params], safe=False)
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, paytm_params], safe=False)
 
 
 @csrf_exempt
@@ -115,7 +113,7 @@ def pay_maintenance_verify(request):
     payment = Payment.objects.get(paytm_order_id=paytm_params["ORDERID"])
 
     if response['STATUS'] == 'TXN_SUCCESS':
-        payment.paytm_transaction_status = 1
+        payment.paytm_transaction_status = Payment.TXN_SUCCESSFUL
         payment.save()
         send_mail(
             f'Payment confirmation by {settings.APP_NAME}',
@@ -149,10 +147,10 @@ def add_resident_maintenance_by_admin(request):
     payment.amount = request.POST['amount']
     payment.timestamp = timezone.now()
     payment.mode = int(request.POST['payment_mode'])
-    payment.type = 1
-    payment.sub_type = 1
+    payment.type = Payment.TYPE_CREDIT
+    payment.sub_type = Payment.SUB_TYPE_MAINTENANCE
     payment.description = request.POST.get('description', None)
-    if int(request.POST['payment_mode']) == 2:
+    if int(request.POST['payment_mode']) == Payment.MODE_CHEQUE:
         payment.cheque_no = str(request.POST['cheque_no'])
     payment.save()
 
@@ -172,11 +170,13 @@ def get_maintenance_payments(request):
     timestamp = request.POST.get('timestamp', timezone.now())
 
     if user.type == 'admin':
-        payments = Payment.objects.prefetch_related().filter(township=user.township, sub_type=1,
+        payments = Payment.objects.prefetch_related().filter(township=user.township,
+                                                             sub_type=Payment.SUB_TYPE_MAINTENANCE,
                                                              timestamp__lt=timestamp).order_by('-timestamp')[
                    :PAGINATION_SIZE]
     else:
-        payments = Payment.objects.prefetch_related().filter(township=user.township, user=user, sub_type=1,
+        payments = Payment.objects.prefetch_related().filter(township=user.township, user=user,
+                                                             sub_type=Payment.SUB_TYPE_MAINTENANCE,
                                                              timestamp__lt=timestamp).order_by('-timestamp')[
                    :PAGINATION_SIZE]
 
