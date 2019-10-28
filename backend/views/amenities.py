@@ -39,6 +39,7 @@ def generate_dict(amenity):
 def generate_booking_dict(booking):
     data = dict()
     user = booking.user
+    data['booking_id'] = booking.id
     data['amenity_id'] = booking.amenity_id
     data['first_name'] = user.first_name
     data['last_name'] = user.last_name
@@ -137,7 +138,7 @@ def get_available_slots(request):
 
     else:
         first_slot_start = INDIA.localize(datetime.datetime(year, month, day))
-        last_slot_end = INDIA.localize(datetime.datetime(year, month, day + 1))
+        last_slot_end = INDIA.localize(datetime.datetime(year, month, day) + datetime.timedelta(days=1))
         bookings = Booking.objects.filter(amenity_id=amenity_id, billing_from__gte=first_slot_start,
                                           billing_to__lte=last_slot_end).count()
         if bookings == 0:
@@ -256,6 +257,109 @@ def get_membership_payments(request):
 
     return JsonResponse([{'login_status': 1, 'request_status': 1},
                          [generate_membership_payments_dict(payment) for payment in payments]], safe=False)
+
+
+@csrf_exempt
+def book_amenity_payment_initiate(request):
+    username = request.POST['username']
+    password = request.POST['password']
+
+    user = authenticate(request, username=username, password=password)
+
+    if user is None:
+        return JsonResponse([{'login_status': 0}], safe=False)
+
+    if user.type != 'resident':
+        return JsonResponse([{'login_status': 1, 'request_status': 0}], safe=False)
+
+    paytm_params = dict()
+    paytm_params['MID'] = settings.PAYTM_MERCHANT_ID
+    paytm_params['ORDER_ID'] = get_new_order_id(50)
+    paytm_params['CUST_ID'] = user.paytm_cust_id
+    paytm_params['TXN_AMOUNT'] = request.POST['TXN_AMOUNT']
+    paytm_params['CHANNEL_ID'] = request.POST['CHANNEL_ID']
+    paytm_params['WEBSITE'] = request.POST['WEBSITE']
+    paytm_params['CALLBACK_URL'] = request.POST['CALLBACK_URL'] + paytm_params['ORDER_ID']
+    paytm_params['INDUSTRY_TYPE_ID'] = request.POST['INDUSTRY_TYPE_ID']
+    paytm_params['CHECKSUMHASH'] = generate_checksum(paytm_params, settings.PAYTM_MERCHANT_KEY)
+
+    payment = Payment.objects.create()
+    payment.user = user
+    payment.township = user.township
+    payment.amount = paytm_params['TXN_AMOUNT']
+    payment.timestamp = timezone.now()
+    payment.mode = Payment.PAYTM
+    payment.type = Payment.CREDIT
+    payment.sub_type = Payment.AMENITY
+    payment.description = request.POST.get('description', None)
+    payment.paytm_order_id = paytm_params['ORDER_ID']
+    payment.paytm_checksumhash = paytm_params['CHECKSUMHASH']
+    payment.paytm_transaction_status = Payment.TXN_POSTED
+    payment.save()
+
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, paytm_params], safe=False)
+
+
+@csrf_exempt
+def book_amenity_payment_verify(request):
+    username = request.POST['username']
+    password = request.POST['password']
+
+    user = authenticate(request, username=username, password=password)
+
+    if user is None:
+        return JsonResponse([{'login_status': 0}], safe=False)
+
+    if user.type != 'resident':
+        return JsonResponse([{'login_status': 1, 'request_status': 0}], safe=False)
+
+    paytm_params = {}
+    paytm_params["MID"] = settings.PAYTM_MERCHANT_ID
+    paytm_params["ORDERID"] = request.POST['ORDER_ID']
+    paytm_params["CHECKSUMHASH"] = generate_checksum(paytm_params, settings.PAYTM_MERCHANT_KEY)
+    post_data = json.dumps(paytm_params)
+
+    # for Staging
+    url = "https://securegw-stage.paytm.in/order/status"
+
+    # for Production
+    # url = "https://securegw.paytm.in/order/status"
+
+    response = requests.post(url, data=post_data, headers={"Content-type": "application/json"}).json()
+    payment = Payment.objects.get(paytm_order_id=paytm_params["ORDERID"])
+
+    if response['STATUS'] == 'TXN_SUCCESS':
+        payment.paytm_transaction_status = Payment.TXN_SUCCESSFUL
+        payment.save()
+        send_mail(
+            f'Payment confirmation by {settings.APP_NAME}',
+            f'Your payment of ₹{payment.amount} towards your township for booking your slot is successful!',
+            settings.DOMAIN_EMAIL,
+            [payment.user.email],
+            fail_silently=False,
+        )
+
+    amenity_id = request.POST['amenity_id']
+    amenity = Amenity.objects.get(pk=amenity_id)
+    day = int(request.POST['day'])
+    month = int(request.POST['month'])
+    year = int(request.POST['year'])
+
+    booking = Booking.objects.create()
+    booking.user = user
+    booking.amenity_id = amenity_id
+    booking.payment = payment
+
+    if amenity.time_period == Amenity.PER_HOUR:
+        hour = int(request.POST['hour'])
+        booking.billing_from = INDIA.localize(datetime.datetime(year, month, day, hour))
+        booking.billing_to = INDIA.localize(datetime.datetime(year, month, day, hour + 1))
+    else:
+        booking.billing_from = INDIA.localize(datetime.datetime(year, month, day, HOUR_START))
+        booking.billing_to = INDIA.localize(datetime.datetime(year, month, day, HOUR_END))
+    booking.save()
+
+    return JsonResponse([response, generate_booking_dict(booking)], safe=False)
 
 
 @csrf_exempt
