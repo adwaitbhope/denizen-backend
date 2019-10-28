@@ -52,11 +52,11 @@ def generate_booking_dict(booking):
         data['payment'] = True
         payment = booking.payment
         data['payment_amount'] = payment.amount
-        if payment.mode == 1:
+        if payment.mode == Payment.CASH:
             data['payment_mode'] = 'Cash'
-        elif payment.mode == 2:
+        elif payment.mode == Payment.CHEQUE:
             data['payment_mode'] = 'Cheque'
-        elif payment.mode == 3:
+        elif payment.mode == Payment.PAYTM:
             data['payment_mode'] = 'PayTm'
     return data
 
@@ -69,11 +69,11 @@ def generate_membership_payments_dict(payment):
     data['wing_id'] = user.wing_id
     data['apartment'] = user.apartment
     data['amount'] = payment.amount
-    if payment.mode == 1:
+    if payment.mode == Payment.CASH:
         data['mode'] = 'Cash'
-    elif payment.mode == 2:
+    elif payment.mode == Payment.CHEQUE:
         data['mode'] = 'Cheque'
-    elif payment.mode == 3:
+    elif payment.mode == Payment.PAYTM:
         data['mode'] = 'PayTm'
     return data
 
@@ -104,35 +104,55 @@ def get_available_slots(request):
         return JsonResponse([{'login_status': 0}], safe=False)
 
     amenity_id = request.POST['amenity_id']
+    amenity = Amenity.objects.get(pk=amenity_id)
     day = int(request.POST['day'])
     month = int(request.POST['month'])
     year = int(request.POST['year'])
 
-    first_slot_start = INDIA.localize(datetime.datetime(year, month, day, HOUR_START))
-    last_slot_end = INDIA.localize(datetime.datetime(year, month, day, HOUR_END))
-
-    bookings = Booking.objects.filter(amenity_id=amenity_id, billing_from__gte=first_slot_start,
-                                      billing_to__lte=last_slot_end).order_by('billing_from')
-
     slots = []
-    hour = HOUR_START
-    while hour < HOUR_END:
-        slot = INDIA.localize(datetime.datetime(year, month, day, hour))
-        slots.append(slot)
-        hour += 1
 
-    for booking in bookings:
-        if booking.billing_from.astimezone(INDIA) in slots:
-            slots.remove(booking.billing_from.astimezone(INDIA))
+    if amenity.time_period == Amenity.PER_HOUR:
+        first_slot_start = INDIA.localize(datetime.datetime(year, month, day, HOUR_START))
+        last_slot_end = INDIA.localize(datetime.datetime(year, month, day, HOUR_END))
 
-    def generate_slot_dict(s):
-        data = dict()
-        data['billing_from'] = s
-        data['billing_to'] = INDIA.localize(datetime.datetime(s.year, s.month, s.day, s.hour + 1))
-        return data
+        bookings = Booking.objects.filter(amenity_id=amenity_id, billing_from__gte=first_slot_start,
+                                          billing_to__lte=last_slot_end).order_by('billing_from')
+        hour = HOUR_START
+        while hour < HOUR_END:
+            slot = INDIA.localize(datetime.datetime(year, month, day, hour))
+            slots.append(slot)
+            hour += 1
 
-    return JsonResponse([{'login_status': 1, 'request_status': 1}, [generate_slot_dict(slot) for slot in slots]],
-                        safe=False)
+        for booking in bookings:
+            if booking.billing_from.astimezone(INDIA) in slots:
+                slots.remove(booking.billing_from.astimezone(INDIA))
+
+        def generate_slot_dict(s):
+            data = dict()
+            data['billing_from'] = s
+            data['billing_to'] = INDIA.localize(datetime.datetime(s.year, s.month, s.day, s.hour + 1))
+            return data
+
+        slot_dicts = [generate_slot_dict(slot) for slot in slots]
+
+    else:
+        first_slot_start = INDIA.localize(datetime.datetime(year, month, day))
+        last_slot_end = INDIA.localize(datetime.datetime(year, month, day + 1))
+        bookings = Booking.objects.filter(amenity_id=amenity_id, billing_from__gte=first_slot_start,
+                                          billing_to__lte=last_slot_end).count()
+        if bookings == 0:
+            slot = INDIA.localize(datetime.datetime(year, month, day, HOUR_START))
+            slots.append(slot)
+
+        def generate_slot_dict(s):
+            data = dict()
+            data['billing_from'] = s
+            data['billing_to'] = INDIA.localize(datetime.datetime(s.year, s.month, s.day, HOUR_END))
+            return data
+
+        slot_dicts = [generate_slot_dict(slot) for slot in slots]
+
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, slot_dicts], safe=False)
 
 
 @csrf_exempt
@@ -175,16 +195,22 @@ def book_amenity(request):
         return JsonResponse([{'login_status': 1, 'request_status': 0}], safe=False)
 
     amenity_id = request.POST['amenity_id']
+    amenity = Amenity.objects.get(pk=amenity_id)
     day = int(request.POST['day'])
     month = int(request.POST['month'])
     year = int(request.POST['year'])
-    hour = int(request.POST['hour'])
 
     booking = Booking.objects.create()
     booking.user = user
     booking.amenity_id = amenity_id
-    booking.billing_from = INDIA.localize(datetime.datetime(year, month, day, hour))
-    booking.billing_to = INDIA.localize(datetime.datetime(year, month, day, hour + 1))
+    
+    if amenity.time_period == Amenity.PER_HOUR:
+        hour = int(request.POST['hour'])
+        booking.billing_from = INDIA.localize(datetime.datetime(year, month, day, hour))
+        booking.billing_to = INDIA.localize(datetime.datetime(year, month, day, hour + 1))
+    else:
+        booking.billing_from = INDIA.localize(datetime.datetime(year, month, day, HOUR_START))
+        booking.billing_to = INDIA.localize(datetime.datetime(year, month, day, HOUR_END))
     booking.save()
 
     return JsonResponse([{'login_status': 1, 'request_status': 1}, generate_booking_dict(booking)], safe=False)
@@ -261,9 +287,9 @@ def membership_payment_initiate(request):
     payment.township = user.township
     payment.amount = paytm_params['TXN_AMOUNT']
     payment.timestamp = timezone.now()
-    payment.mode = Payment.MODE_PAYTM
-    payment.type = Payment.TYPE_CREDIT
-    payment.sub_type = Payment.SUB_TYPE_MEMBERSHIP
+    payment.mode = Payment.PAYTM
+    payment.type = Payment.CREDIT
+    payment.sub_type = Payment.MEMBERSHIP
     payment.description = request.POST.get('description', None)
     payment.paytm_order_id = paytm_params['ORDER_ID']
     payment.paytm_checksumhash = paytm_params['CHECKSUMHASH']
@@ -313,4 +339,3 @@ def membership_payment_verify(request):
         )
 
     return JsonResponse([response, generate_membership_payments_dict(payment)], safe=False)
-

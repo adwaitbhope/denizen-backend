@@ -72,12 +72,12 @@ class User(AbstractUser):
 
 
 class Amenity(models.Model):
-    name = models.CharField(max_length=20)
-    township = models.ForeignKey(Township, on_delete=models.CASCADE)
-    billing_rate = models.IntegerField()
+    name = models.CharField(max_length=20, default=None, blank=True, null=True)
+    township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    billing_rate = models.IntegerField(default=None, blank=True, null=True)
 
-    # 1 ==> "Per hour", amenity will be billed by the hour
-    # 2 ==> "Per day", amenity will be billed by the day
+    PER_HOUR = 1        # amenity will be billed by the hour
+    PER_DAY = 2         # amenity will be billed by the day
     time_period = models.IntegerField(default=None, blank=True, null=True)
 
     # To specify interval of billing
@@ -93,9 +93,9 @@ class TownshipPayment(models.Model):
     amount = models.FloatField(default=None, blank=True, null=True)
     timestamp = models.DateTimeField(default=timezone.now)
 
-    MODE_CASH = 1
-    MODE_CHEQUE = 2
-    MODE_PAYTM = 3
+    CASH = 1
+    CHEQUE = 2
+    PAYTM = 3
     mode = models.IntegerField(default=None, blank=True, null=True)
     paytm_order_id = models.CharField(max_length=50, default=None, blank=True, null=True)
     paytm_checksumhash = models.CharField(max_length=108, default=None, blank=True, null=True)
@@ -113,20 +113,20 @@ class Payment(models.Model):
     amount = models.FloatField(default=None, blank=True, null=True)
     timestamp = models.DateTimeField(default=timezone.now)
 
-    MODE_CASH = 1
-    MODE_CHEQUE = 2
-    MODE_PAYTM = 3
+    CASH = 1
+    CHEQUE = 2
+    PAYTM = 3
     mode = models.IntegerField(default=None, blank=True, null=True)
 
     # (w.r.t. township's account)
-    TYPE_CREDIT = 1
-    TYPE_DEBIT = 2
+    CREDIT = 1
+    DEBIT = 2
     type = models.IntegerField(default=None, blank=True, null=True)
 
-    SUB_TYPE_MAINTENANCE = 1
-    SUB_TYPE_MEMBERSHIP = 2
-    SUB_TYPE_AMENITY = 3
-    SUB_TYPE_OTHER = 0
+    MAINTENANCE = 1
+    MEMBERSHIP = 2
+    AMENITY = 3
+    OTHER = 0
     sub_type = models.IntegerField(default=None, blank=True, null=True)
     description = models.TextField(default=None, blank=True, null=True)
 

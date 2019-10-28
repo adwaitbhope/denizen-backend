@@ -344,11 +344,9 @@ def register_existing_initiate(request):
     township_payment.township = township
     township_payment.amount = paytm_params['TXN_AMOUNT']
     township_payment.timestamp = timezone.now()
-    # TODO: Replace by constant defined in the class
-    township_payment.mode = 3
+    township_payment.mode = TownshipPayment.PAYTM
     township_payment.paytm_order_id = paytm_order_id = paytm_params['ORDER_ID']
-    # TODO: Replace by constant defined in the class
-    township_payment.paytm_transaction_status = 0
+    township_payment.paytm_transaction_status = TownshipPayment.TXN_POSTED
     township_payment.paytm_checksumhash = paytm_params['CHECKSUMHASH']
     township_payment.save()
 
@@ -456,7 +454,7 @@ def register_existing_verify(request):
 
     if response['STATUS'] == 'TXN_SUCCESS' or response['STATUS'] == 'TXN_FAILURE':
         # TODO: Replace by constant defined in the class
-        township_payment.paytm_transaction_status = 1
+        township_payment.paytm_transaction_status = TownshipPayment.TXN_SUCCESSFUL
         township_payment.save()
         pdf_path = application_id + '.pdf'
         email = EmailMessage('Welcome to Township Manager',

@@ -20,9 +20,9 @@ def generate_dict(payment):
     data_dict['amount'] = payment.amount
     data_dict['wing_id'] = payment.user.wing_id
     data_dict['apartment'] = payment.user.apartment
-    if payment.mode == Payment.MODE_CASH:
+    if payment.mode == Payment.CASH:
         data_dict['mode'] = 'Cash'
-    elif payment.mode == Payment.MODE_CHEQUE:
+    elif payment.mode == Payment.CHEQUE:
         data_dict['mode'] = 'Cheque'
         data_dict['cheque_no'] = payment.cheque_no
     else:
@@ -72,9 +72,9 @@ def pay_maintenance_initiate(request):
     payment.township = user.township
     payment.amount = paytm_params['TXN_AMOUNT']
     payment.timestamp = timezone.now()
-    payment.mode = Payment.MODE_PAYTM
-    payment.type = Payment.TYPE_CREDIT
-    payment.sub_type = Payment.SUB_TYPE_MAINTENANCE
+    payment.mode = Payment.PAYTM
+    payment.type = Payment.CREDIT
+    payment.sub_type = Payment.MAINTENANCE
     payment.description = request.POST.get('description', None)
     payment.paytm_order_id = paytm_params['ORDER_ID']
     payment.paytm_checksumhash = paytm_params['CHECKSUMHASH']
@@ -147,10 +147,10 @@ def add_resident_maintenance_by_admin(request):
     payment.amount = request.POST['amount']
     payment.timestamp = timezone.now()
     payment.mode = int(request.POST['payment_mode'])
-    payment.type = Payment.TYPE_CREDIT
-    payment.sub_type = Payment.SUB_TYPE_MAINTENANCE
+    payment.type = Payment.CREDIT
+    payment.sub_type = Payment.MAINTENANCE
     payment.description = request.POST.get('description', None)
-    if int(request.POST['payment_mode']) == Payment.MODE_CHEQUE:
+    if int(request.POST['payment_mode']) == Payment.CHEQUE:
         payment.cheque_no = str(request.POST['cheque_no'])
     payment.save()
 
@@ -171,12 +171,12 @@ def get_maintenance_payments(request):
 
     if user.type == 'admin':
         payments = Payment.objects.prefetch_related().filter(township=user.township,
-                                                             sub_type=Payment.SUB_TYPE_MAINTENANCE,
+                                                             sub_type=Payment.MAINTENANCE,
                                                              timestamp__lt=timestamp).order_by('-timestamp')[
                    :PAGINATION_SIZE]
     else:
         payments = Payment.objects.prefetch_related().filter(township=user.township, user=user,
-                                                             sub_type=Payment.SUB_TYPE_MAINTENANCE,
+                                                             sub_type=Payment.MAINTENANCE,
                                                              timestamp__lt=timestamp).order_by('-timestamp')[
                    :PAGINATION_SIZE]
 
