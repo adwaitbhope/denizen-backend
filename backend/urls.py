@@ -47,7 +47,7 @@ urlpatterns = [
     path('intercom/', views.get_users, name='get_intercom_users'),
 
     path('amenities/', views.get_amenities, name='get_amenities'),
-    path('amenities/availability', views.get_available_slots, name='get_amenity_availability'),
+    path('amenities/availability/', views.get_available_slots, name='get_amenity_availability'),
     path('amenities/book/', views.book_amenity, name='book_amenity'),
     path('amenities/booking_history/', views.get_booking_history, name='amenity_booking_history'),
     path('amenities/membership/', views.get_membership_payments, name='get_membership_payments'),
