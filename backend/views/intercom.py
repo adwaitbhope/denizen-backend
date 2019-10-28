@@ -14,6 +14,8 @@ def generate_dict(user):
     if user.type == 'resident':
         data_dict['wing_id'] = user.wing_id
         data_dict['apartment'] = user.apartment
+    else:
+        data_dict['designation'] = user.designation
     return data_dict
 
 
