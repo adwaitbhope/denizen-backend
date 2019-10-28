@@ -65,6 +65,7 @@ def generate_booking_dict(booking):
 def generate_membership_payments_dict(payment):
     data = dict()
     user = payment.user
+    data['payment_id'] = payment.id
     data['first_name'] = user.first_name
     data['last_name'] = user.last_name
     data['wing_id'] = user.wing_id
@@ -251,10 +252,10 @@ def get_membership_payments(request):
         return JsonResponse([{'login_status': 0}], safe=False)
 
     if user.type == 'admin':
-        payments = Payment.objects.filter(township=user.township, type=1, sub_type=2).order_by('-timestamp')
+        payments = Payment.objects.filter(township=user.township, type=Payment.CREDIT, sub_type=Payment.MEMBERSHIP).order_by('-timestamp')
 
     else:
-        payments = Payment.objects.filter(user=user, type=1, sub_type=2).order_by('-timestamp')
+        payments = Payment.objects.filter(user=user, type=Payment.CREDIT, sub_type=Payment.MEMBERSHIP).order_by('-timestamp')
 
     return JsonResponse([{'login_status': 1, 'request_status': 1},
                          [generate_membership_payments_dict(payment) for payment in payments]], safe=False)
