@@ -51,7 +51,7 @@ urlpatterns = [
     path('amenities/book/', views.book_amenity, name='book_amenity'),
     path('amenities/booking_history/', views.get_booking_history, name='amenity_booking_history'),
     path('amenities/membership/', views.get_membership_payments, name='get_membership_payments'),
-    path('amenities/membership/pay/initiate/', views, name='pay_membership_initiate'),
-    path('amenities/membership/pay/verify/', views, name='pay_membership_verify'),
+    # path('amenities/membership/pay/initiate/', views, name='pay_membership_initiate'),
+    # path('amenities/membership/pay/verify/', views, name='pay_membership_verify'),
 
 ]
