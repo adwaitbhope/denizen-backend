@@ -7,8 +7,9 @@ from django.conf import settings
 from ..models import *
 from fpdf import FPDF
 import string
-import random
 import os
+import datetime
+import random
 
 
 def create_pdf(township, security_creds):
@@ -46,13 +47,14 @@ def random_string(length):
 
 def generate_desk_dict(desk):
     data_dict = dict()
-    data_dict['security_desk_id'] = desk.id
+    data_dict['desk_id'] = desk.id
     data_dict['designation'] = desk.designation
     return data_dict
 
 
 def generate_personnel_dict(personnel):
     data_dict = dict()
+    data_dict['personnel_id'] = personnel.id
     data_dict['first_name'] = personnel.first_name
     data_dict['last_name'] = personnel.last_name
     data_dict['phone'] = personnel.phone
@@ -92,13 +94,15 @@ def add_security_desk(request):
 
     security_desks = []
     security_creds = []
-    for i in range(int(request.POST['num_security_desks'])):
-        random_uname = random_string(8)
-        random_pwd = random_string(8)
-        security_creds.append({'username': random_uname, 'password': random_pwd})
-        security_desk = User.objects.create(username=random_uname, password=make_password(random_pwd, None, 'md5'),
-                                            township=user.township, type='security')
-        security_desks.append(security_desk)
+
+    random_uname = random_string(8)
+    random_pwd = random_string(8)
+
+    security_creds.append({'username': random_uname, 'password': random_pwd})
+    security_desk = User.objects.create(username=random_uname, password=make_password(random_pwd, None, 'md5'),
+                                        township=user.township, type='security',
+                                        designation=request.POST['name'], phone=request.POST['phone'])
+    security_desks.append(security_desk)
 
     pdf_path = create_pdf(user.township, security_creds)
 
@@ -144,9 +148,73 @@ def add_security_personnel(request):
     if user.type != 'admin':
         return JsonResponse([{'login_status': 1, 'request_status': 0}], safe=False)
 
-    return JsonResponse([{'login_status': 1, 'request_status': 1}], safe=False)
+    first_name = request.POST['first_name']
+    last_name = request.POST['last_name']
+    phone = request.POST['phone']
+    shift_start_hour = int(request.POST['shift_start_hour'])
+    shift_start_minute = int(request.POST['shift_start_minute'])
+    shift_end_hour = int(request.POST['shift_end_hour'])
+    shift_end_minute = int(request.POST['shift_end_minute'])
+
+    personnel = SecurityPersonnel.objects.create()
+    personnel.township = user.township
+    personnel.first_name = first_name
+    personnel.last_name = last_name
+    personnel.phone = phone
+    personnel.shift_start = datetime.time(shift_start_hour, shift_start_minute)
+    personnel.shift_end = datetime.time(shift_end_hour, shift_end_minute)
+    personnel.save()
+
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, generate_personnel_dict(personnel)], safe=False)
 
 
 @csrf_exempt
 def edit_security_personnel(request):
-    pass
+    username = request.POST['username']
+    password = request.POST['password']
+
+    user = authenticate(request, username=username, password=password)
+
+    if user is None:
+        return JsonResponse([{'login_status': 0}], safe=False)
+
+    if user.type != 'admin':
+        return JsonResponse([{'login_status': 1, 'request_status': 0}], safe=False)
+
+    personnel = SecurityPersonnel.objects.get(pk=request.POST['personnel_id'])
+
+    first_name = request.POST['first_name']
+    last_name = request.POST['last_name']
+    phone = request.POST['phone']
+    shift_start_hour = int(request.POST['shift_start_hour'])
+    shift_start_minute = int(request.POST['shift_start_minute'])
+    shift_end_hour = int(request.POST['shift_end_hour'])
+    shift_end_minute = int(request.POST['shift_end_minute'])
+
+    personnel.first_name = first_name
+    personnel.last_name = last_name
+    personnel.phone = phone
+    personnel.shift_start = datetime.time(shift_start_hour, shift_start_minute)
+    personnel.shift_end = datetime.time(shift_end_hour, shift_end_minute)
+    personnel.save()
+
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, generate_personnel_dict(personnel)], safe=False)
+
+
+@csrf_exempt
+def delete_security_personnel(request):
+    username = request.POST['username']
+    password = request.POST['password']
+
+    user = authenticate(request, username=username, password=password)
+
+    if user is None:
+        return JsonResponse([{'login_status': 0}], safe=False)
+
+    if user.type != 'admin':
+        return JsonResponse([{'login_status': 1, 'request_status': 0}], safe=False)
+
+    personnel = SecurityPersonnel.objects.get(pk=request.POST['personnel_id'])
+    personnel.delete()
+
+    return JsonResponse([{'login_status': 1, 'request_status': 1}], safe=False)

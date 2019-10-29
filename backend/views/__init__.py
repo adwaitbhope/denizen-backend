@@ -7,3 +7,4 @@ from .service_vendors import *
 from .admins import *
 from .intercom import *
 from .amenities import *
+from .security import *

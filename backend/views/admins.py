@@ -65,7 +65,7 @@ def get_admins(request):
     if user is None:
         return JsonResponse([{'login_status': 0}], safe=False)
 
-    admins = User.objects.filter(township=user.township, type='admin')
+    admins = User.objects.filter(township=user.township, type='admin', profile_updated=True)
     return JsonResponse([{'login_status': 1, 'request_status': 1}, [generate_dict(admin) for admin in admins]],
                         safe=False)
 
