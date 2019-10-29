@@ -20,7 +20,7 @@ def create_pdf(township, security_creds):
     pdf.ln()
 
     pdf.set_font('Arial', 'B', 12)
-    pdf.cell(150, 6, 'Admins', border=0, ln=1, align='L')
+    pdf.cell(150, 6, 'Security', border=0, ln=1, align='L')
 
     pdf.set_font('Times', '', 10)
     for security in security_creds:
@@ -93,7 +93,6 @@ def add_security_desk(request):
     if user.type != 'admin':
         return JsonResponse([{'login_status': 1, 'request_status': 0}], safe=False)
 
-    security_desks = []
     security_creds = []
 
     random_uname = random_string(8)
@@ -103,11 +102,10 @@ def add_security_desk(request):
     security_desk = User.objects.create(username=random_uname, password=make_password(random_pwd, None, 'md5'),
                                         township=user.township, type='security',
                                         designation=request.POST['name'], phone=request.POST['phone'])
-    security_desks.append(security_desk)
 
     pdf_path = create_pdf(user.township, security_creds)
 
-    email = EmailMessage(f'{settings.APP_NAME} - Admin credentials',
+    email = EmailMessage(f'{settings.APP_NAME} - Security credentials',
                          f"PFA the document that contains login credentials for the "
                          f"security desk that you requested.",
                          settings.DOMAIN_EMAIL, [user.email])
@@ -117,7 +115,7 @@ def add_security_desk(request):
     os.remove(pdf_path)
 
     return JsonResponse(
-        [{'login_status': 1, 'request_status': 1}, [generate_desk_dict(desk) for desk in security_desks]],
+        [{'login_status': 1, 'request_status': 1}, generate_desk_dict(security_desk)],
         safe=False)
 
 
