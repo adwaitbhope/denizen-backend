@@ -229,6 +229,7 @@ def get_booking_history(request):
     # admin can filter if he wants just one time or member bookings as well
     username = request.POST['username']
     password = request.POST['password']
+    with_payments_only = True if request.POST['with_payments_only'] == 'true' else False
 
     user = authenticate(request, username=username, password=password)
 
@@ -239,7 +240,10 @@ def get_booking_history(request):
         bookings = Booking.objects.filter(user=user).order_by('-billing_from')
 
     if user.type == 'admin':
-        bookings = Booking.objects.filter(township=user.township).order_by('-billing_from')
+        if with_payments_only:
+            bookings = Booking.objects.filter(township=user.township, payment=with_payments_only).order_by('-billing_from')
+        else:
+            bookings = Booking.objects.filter(township=user.township).order_by('-billing_from')
 
     return JsonResponse(
         [{'login_status': 1, 'request_status': 1}, [generate_booking_dict(booking) for booking in bookings]],
@@ -342,7 +346,7 @@ def book_amenity_payment_verify(request):
         payment.save()
         send_mail(
             f'Payment confirmation by {settings.APP_NAME}',
-            f'Your payment of ₹{payment.amount} towards your township for booking your slot is successful!',
+            f'Payment of ₹{payment.amount} towards your township for booking your slot is successful!',
             settings.DOMAIN_EMAIL,
             [payment.user.email],
             fail_silently=False,
@@ -445,7 +449,7 @@ def membership_payment_verify(request):
         payment.save()
         send_mail(
             f'Payment confirmation by {settings.APP_NAME}',
-            f'Your payment of ₹{payment.amount} towards your township for membership is successful!',
+            f'Payment of ₹{payment.amount} towards your township for membership is successful!',
             settings.DOMAIN_EMAIL,
             [payment.user.email],
             fail_silently=False,
