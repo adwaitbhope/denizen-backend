@@ -71,7 +71,7 @@ def generate_membership_payments_dict(payment):
     data['wing_id'] = user.wing_id
     data['apartment'] = user.apartment
     data['timestamp'] = payment.timestamp.astimezone(INDIA)
-    data['valid_thru_timestamp'] = (payment.timestamp + datetime.timedelta(days=364)).astimezone(INDIA)
+    data['valid_thru_timestamp'] = (payment.timestamp + datetime.timedelta(days=365)).astimezone(INDIA)
     data['amount'] = payment.amount
     if payment.mode == Payment.CASH:
         data['mode'] = 'Cash'
@@ -182,7 +182,10 @@ def check_membership_status(request):
     if timestamp < (INDIA.localize(datetime.datetime.now()) - datetime.timedelta(days=365)):
         return JsonResponse([{'login_status': 1, 'request_status': 1}, {'membership_status': False}], safe=False)
 
-    return JsonResponse([{'login_status': 1, 'request_status': 1}, {'membership_status': True}], safe=False)
+    valid_thru_timestamp = INDIA.localize(datetime.datetime.now()) + datetime.timedelta(days=365)
+
+    return JsonResponse([{'login_status': 1, 'request_status': 1},
+                         {'membership_status': True, 'valid_thru_timestamp': valid_thru_timestamp}], safe=False)
 
 
 @csrf_exempt
@@ -207,7 +210,7 @@ def book_amenity(request):
     booking = Booking.objects.create()
     booking.user = user
     booking.amenity_id = amenity_id
-    
+
     if amenity.time_period == Amenity.PER_HOUR:
         hour = int(request.POST['hour'])
         booking.billing_from = INDIA.localize(datetime.datetime(year, month, day, hour))
@@ -254,10 +257,12 @@ def get_membership_payments(request):
         return JsonResponse([{'login_status': 0}], safe=False)
 
     if user.type == 'admin':
-        payments = Payment.objects.filter(township=user.township, type=Payment.CREDIT, sub_type=Payment.MEMBERSHIP).order_by('-timestamp')
+        payments = Payment.objects.filter(township=user.township, type=Payment.CREDIT,
+                                          sub_type=Payment.MEMBERSHIP).order_by('-timestamp')
 
     else:
-        payments = Payment.objects.filter(user=user, type=Payment.CREDIT, sub_type=Payment.MEMBERSHIP).order_by('-timestamp')
+        payments = Payment.objects.filter(user=user, type=Payment.CREDIT, sub_type=Payment.MEMBERSHIP).order_by(
+            '-timestamp')
 
     return JsonResponse([{'login_status': 1, 'request_status': 1},
                          [generate_membership_payments_dict(payment) for payment in payments]], safe=False)
