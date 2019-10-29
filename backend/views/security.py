@@ -48,6 +48,7 @@ def random_string(length):
 def generate_desk_dict(desk):
     data_dict = dict()
     data_dict['desk_id'] = desk.id
+    data_dict['phone'] = desk.phone
     data_dict['designation'] = desk.designation
     return data_dict
 
@@ -107,8 +108,8 @@ def add_security_desk(request):
     pdf_path = create_pdf(user.township, security_creds)
 
     email = EmailMessage(f'{settings.APP_NAME} - Admin credentials',
-                         f"PFA the document that contains login credentials for {request.POST['num_security_desks']} "
-                         f"security desks that you requested.",
+                         f"PFA the document that contains login credentials for the "
+                         f"security desk that you requested.",
                          settings.DOMAIN_EMAIL, [user.email])
     email.content_subtype = 'html'
     email.attach_file(pdf_path)
