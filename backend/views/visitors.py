@@ -36,6 +36,20 @@ def add_visitor_entry(request):
     Visitor.objects.create(first_name=first_name, last_name=last_name, apartment=visitor_apartment,
                            township=user.township, in_timestamp=timezone.now())
 
+    beams_client = PushNotifications(instance_id=settings.BEAMS_INSTANCE_ID, secret_key=settings.BEAMS_SECRET_KEY)
+
+    response = beams_client.publish_to_users(
+        user_ids=[visitor_apartment.username],
+        publish_body={
+            'fcm': {
+                'notification': {
+                    'title': 'New visitor!',
+                    'body': first_name + ' ' + last_name + ' is here to meet you',
+                },
+            },
+        },
+    )
+
     return JsonResponse([{'login_status': 1, 'request_status': 1}], safe=False)
 
 
