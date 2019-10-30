@@ -8,3 +8,4 @@ from .admins import *
 from .intercom import *
 from .amenities import *
 from .security import *
+from .finances import *

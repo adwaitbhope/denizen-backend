@@ -29,9 +29,9 @@ def get_users(request):
     if user is None:
         return JsonResponse([{'login_status': 0}], safe=False)
 
-    admins = User.objects.filter(township=user.township, type='admin')
-    security_desks = User.objects.filter(township=user.township, type='security')
-    residents = User.objects.filter(township=user.township, type='resident')
+    admins = User.objects.filter(township=user.township, type='admin', profile_updated=True)
+    security_desks = User.objects.filter(township=user.township, type='security', profile_updated=True)
+    residents = User.objects.filter(township=user.township, type='resident', profile_updated=True)
 
     admins_list = [generate_dict(admin) for admin in admins]
     security_list = [generate_dict(security_desk) for security_desk in security_desks]
