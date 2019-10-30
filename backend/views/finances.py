@@ -13,6 +13,9 @@ import pytz
 import datetime
 
 
+INDIA = pytz.timezone('Asia/Calcutta')
+
+
 def create_pdf(township, maintenances, memberships, one_times, expenses):
     maintenances_total = 0
     memberships_total = 0
@@ -158,6 +161,33 @@ def add_finance(request):
 
     if user.type != 'admin':
         return JsonResponse([{'login_status': 1, 'authorization': 0}], safe=False)
+
+    title = request.POST['title']
+    expense_type = Payment.CREDIT if request.POST['expense_type'] == '1' else Payment.DEBIT
+    amount = int(request.POST['amount'])
+    if request.POST['payment_mode'] == 1:
+        mode = Payment.CASH
+    elif request.POST['payment_mode'] == 2:
+        mode = Payment.CHEQUE
+    else:
+        mode = Payment.PAYTM
+
+    day = int(request.POST['day'])
+    month = int(request.POST['month'])
+    year = int(request.POST['year'])
+
+    expense = Payment.objects.create()
+    expense.township_id = user.township
+    expense.description = title
+    expense.amount = amount
+    expense.type = expense_type
+    expense.mode = mode
+    expense.sub_type = Payment.OTHER
+    if mode == Payment.CHEQUE:
+        expense.sub_type = request.POST['cheque_no']
+
+    expense.timestamp = INDIA.localize(datetime.datetime(year, month, day))
+    expense.save()
 
     return JsonResponse([{'login_status': 1, 'request_status': 1}], safe=False)
 

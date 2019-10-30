@@ -62,7 +62,7 @@ urlpatterns = [
     path('security/personnel/edit/', views.edit_security_personnel, name='edit_security_personnel'),
     path('security/personnel/delete/', views.delete_security_personnel, name='delete_security_personnel'),
 
-    path('finances/credit/new/', views.add_finance, name='add_finance'),
+    path('finances/new/', views.add_finance, name='add_finance'),
     path('finances/generate_report/', views.generate_report, name='add_debit'),
 
 ]
