@@ -195,7 +195,7 @@ def generate_report(request):
     email.attach_alternative(html_content, "text/html")
     email.content_subtype = 'html'
     email.attach_file(pdf_path)
-    # email.send()
-    # os.remove(pdf_path)
+    email.send()
+    os.remove(pdf_path)
 
     return JsonResponse([{'login_status': 1, 'authorization': 1}], safe=False)
