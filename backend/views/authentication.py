@@ -424,10 +424,20 @@ def register_new(request):
     os.remove(details_path)
     os.remove(certificate_path)
 
-    client_email = EmailMessage('Thank you for registering!',
-                                'Your application has been submitted successfully, and your Application ID is ' + township.application_id,
-                                settings.DOMAIN_EMAIL, [township.applicant_email])
+    html = get_template('welcome.html')
+    html_content = html.render({'application_id': township.application_id})
+
+    client_email = EmailMultiAlternatives('Welcome to Denizen!',
+                                          f'Your application has been submitted. We\'ll notify you once your application has been approved.',
+                                          settings.DOMAIN_EMAIL, [township.applicant_email])
+    client_email.attach_alternative(html_content, "text/html")
+    client_email.content_subtype = 'html'
     client_email.send()
+
+    # client_email = EmailMessage('Thank you for registering!',
+    #                             'Your application has been submitted successfully, and your Application ID is ' + township.application_id,
+    #                             settings.DOMAIN_EMAIL, [township.applicant_email])
+    # client_email.send()
 
     return JsonResponse([{'registration_status': 1, 'application_id': application_id}], safe=False)
 
@@ -457,12 +467,18 @@ def register_existing_verify(request):
         township_payment.paytm_transaction_status = TownshipPayment.TXN_SUCCESSFUL
         township_payment.save()
         pdf_path = application_id + '.pdf'
-        email = EmailMessage('Welcome to Township Manager',
-                             'Thank you for registering with us.\nPFA the document containing login credentials for everyone.\n\nP.S. Username and password both must be changed upon first login.',
-                             settings.DOMAIN_EMAIL, [township.applicant_email])
-        email.content_subtype = 'html'
-        email.attach_file(pdf_path)
-        email.send()
+
+        html = get_template('pfa_user_details.html')
+        html_content = html.render({})
+
+        client_email = EmailMultiAlternatives('You\'re onboard!',
+                                              f'The PDF attached in this e-mail contains the login credentials for admins, residents and security desks. Please share the same with your society\'s residents. Please note that the password must be changed after the first login.',
+                                              settings.DOMAIN_EMAIL, [township.applicant_email])
+        client_email.attach_alternative(html_content, "text/html")
+        client_email.content_subtype = 'html'
+        client_email.attach_file(pdf_path)
+        client_email.send()
+
         os.remove(pdf_path)
 
     return JsonResponse([response], safe=False)
@@ -475,10 +491,17 @@ def verify_township(request, verification_link):
     township.verification_timestamp = timezone.now()
     township.save()
 
-    client_email = EmailMessage('Your application is verified',
-                                'Your application has been verified by our administrators, you can now continute to step two and complete your registration',
-                                'noreply@township-manager.com', [township.applicant_email])
-    client_email.send()
+    html = get_template('application_approved_html_township.html')
+    html_content = html.render({})
+
+    email_subject = 'Verification successful'
+    email = EmailMultiAlternatives(email_subject,
+                                   'Your application has been approved. You can now proceed with step two in the app inorder to proceed.',
+                                   settings.DOMAIN_EMAIL,
+                                   [township.applicant_email])
+    email.attach_alternative(html_content, "text/html")
+    email.content_subtype = 'html'
+    email.send()
 
     return HttpResponse(township.name + ' is now verified!')
 

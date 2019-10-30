@@ -1,8 +1,10 @@
 from django.http import JsonResponse
 from django.core.mail import send_mail
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.template.loader import get_template
 from pusher_push_notifications import PushNotifications
 from .paytm.Checksum import *
 from ..models import *
@@ -115,13 +117,16 @@ def pay_maintenance_verify(request):
     if response['STATUS'] == 'TXN_SUCCESS':
         payment.paytm_transaction_status = Payment.TXN_SUCCESSFUL
         payment.save()
-        send_mail(
-            f'Payment confirmation by {settings.APP_NAME}',
-            f'Your payment of ₹{payment.amount} towards your township is successful!',
-            settings.DOMAIN_EMAIL,
-            [payment.user.email],
-            fail_silently=False,
-        )
+
+        html = get_template('payment_successful.html')
+        html_content = html.render({'reason': 'Maintenance', 'amount': str(payment.amount)})
+
+        client_email = EmailMultiAlternatives('Payment successful',
+                                              f'Payment of ₹{str(payment.amount)} towards your township has been successful.',
+                                              settings.DOMAIN_EMAIL, [payment.user.email])
+        client_email.attach_alternative(html_content, "text/html")
+        client_email.content_subtype = 'html'
+        client_email.send()
 
     return JsonResponse([response, generate_dict(payment)], safe=False)
 

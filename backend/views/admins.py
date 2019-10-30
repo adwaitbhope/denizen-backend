@@ -2,8 +2,9 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.views.decorators.csrf import csrf_exempt
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.conf import settings
+from django.template.loader import get_template
 from ..models import *
 from fpdf import FPDF
 import string
@@ -90,18 +91,21 @@ def add_admins(request):
         random_pwd = random_string(8)
         admin_creds.append({'username': random_uname, 'password': random_pwd})
         admin = User.objects.create(username=random_uname, password=make_password(random_pwd, None, 'md5'),
-                                          township=user.township, type='admin')
+                                    township=user.township, type='admin')
         admins.append(admin)
 
     pdf_path = create_pdf(user.township, admin_creds)
 
-    email = EmailMessage(f'{settings.APP_NAME} - Admin credentials',
-                         f"PFA the document that contains login credentials for {request.POST['num_admins']} admin(s) "
-                         f"that you requested.",
-                         settings.DOMAIN_EMAIL, [user.email])
-    email.content_subtype = 'html'
-    email.attach_file(pdf_path)
-    email.send()
+    html = get_template('pfa_user_details.html')
+    html_content = html.render({})
+
+    client_email = EmailMultiAlternatives('You\'re onboard!',
+                                          f'The PDF attached in this e-mail contains the login credentials for admins, residents and security desks. Please share the same with your society\'s residents. Please note that the password must be changed after the first login.',
+                                          settings.DOMAIN_EMAIL, [user.email])
+    client_email.attach_alternative(html_content, "text/html")
+    client_email.content_subtype = 'html'
+    client_email.attach_file(pdf_path)
+    client_email.send()
     os.remove(pdf_path)
 
     return JsonResponse([{'login_status': 1, 'request_status': 1}, [generate_dict(admin) for admin in admins]],

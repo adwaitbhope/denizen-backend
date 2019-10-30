@@ -6,9 +6,10 @@ import requests
 import json
 from django.http import JsonResponse
 from django.contrib.auth import authenticate
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from django.core.mail import send_mail
+from django.template.loader import get_template
 from .paytm.Checksum import *
 from ..models import *
 
@@ -347,33 +348,36 @@ def book_amenity_payment_verify(request):
     if response['STATUS'] == 'TXN_SUCCESS':
         payment.paytm_transaction_status = Payment.TXN_SUCCESSFUL
         payment.save()
-        send_mail(
-            f'Payment confirmation by {settings.APP_NAME}',
-            f'Payment of ₹{payment.amount} towards your township for booking your slot is successful!',
-            settings.DOMAIN_EMAIL,
-            [payment.user.email],
-            fail_silently=False,
-        )
 
-    amenity_id = request.POST['amenity_id']
-    amenity = Amenity.objects.get(pk=amenity_id)
-    day = int(request.POST['day'])
-    month = int(request.POST['month'])
-    year = int(request.POST['year'])
+        amenity_id = request.POST['amenity_id']
+        amenity = Amenity.objects.get(pk=amenity_id)
+        day = int(request.POST['day'])
+        month = int(request.POST['month'])
+        year = int(request.POST['year'])
 
-    booking = Booking.objects.create()
-    booking.user = user
-    booking.amenity_id = amenity_id
-    booking.payment = payment
+        booking = Booking.objects.create()
+        booking.user = user
+        booking.amenity_id = amenity_id
+        booking.payment = payment
 
-    if amenity.time_period == Amenity.PER_HOUR:
-        hour = int(request.POST['hour'])
-        booking.billing_from = INDIA.localize(datetime.datetime(year, month, day, hour))
-        booking.billing_to = INDIA.localize(datetime.datetime(year, month, day, hour + 1))
-    else:
-        booking.billing_from = INDIA.localize(datetime.datetime(year, month, day, HOUR_START))
-        booking.billing_to = INDIA.localize(datetime.datetime(year, month, day, HOUR_END))
-    booking.save()
+        if amenity.time_period == Amenity.PER_HOUR:
+            hour = int(request.POST['hour'])
+            booking.billing_from = INDIA.localize(datetime.datetime(year, month, day, hour))
+            booking.billing_to = INDIA.localize(datetime.datetime(year, month, day, hour + 1))
+        else:
+            booking.billing_from = INDIA.localize(datetime.datetime(year, month, day, HOUR_START))
+            booking.billing_to = INDIA.localize(datetime.datetime(year, month, day, HOUR_END))
+        booking.save()
+
+        html = get_template('payment_successful.html')
+        html_content = html.render({'reason': amenity.name + ' slot', 'amount': str(payment.amount)})
+
+        client_email = EmailMultiAlternatives('Payment successful',
+                                              f'Payment of ₹{str(payment.amount)} towards your township has been successful.',
+                                              settings.DOMAIN_EMAIL, [payment.user.email])
+        client_email.attach_alternative(html_content, "text/html")
+        client_email.content_subtype = 'html'
+        client_email.send()
 
     return JsonResponse([response, generate_booking_dict(booking)], safe=False)
 
@@ -450,12 +454,14 @@ def membership_payment_verify(request):
     if response['STATUS'] == 'TXN_SUCCESS':
         payment.paytm_transaction_status = Payment.TXN_SUCCESSFUL
         payment.save()
-        send_mail(
-            f'Payment confirmation by {settings.APP_NAME}',
-            f'Payment of ₹{payment.amount} towards your township for membership is successful!',
-            settings.DOMAIN_EMAIL,
-            [payment.user.email],
-            fail_silently=False,
-        )
+        html = get_template('payment_successful.html')
+        html_content = html.render({'reason': 'Membership', 'amount': str(payment.amount)})
+
+        client_email = EmailMultiAlternatives('Payment successful',
+                                              f'Payment of ₹{str(payment.amount)} towards your township has been successful.',
+                                              settings.DOMAIN_EMAIL, [payment.user.email])
+        client_email.attach_alternative(html_content, "text/html")
+        client_email.content_subtype = 'html'
+        client_email.send()
 
     return JsonResponse([response, generate_membership_payments_dict(payment)], safe=False)

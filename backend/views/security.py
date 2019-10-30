@@ -2,7 +2,8 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.views.decorators.csrf import csrf_exempt
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, EmailMultiAlternatives
+from django.template.loader import get_template
 from django.conf import settings
 from ..models import *
 from fpdf import FPDF
@@ -105,13 +106,16 @@ def add_security_desk(request):
 
     pdf_path = create_pdf(user.township, security_creds)
 
-    email = EmailMessage(f'{settings.APP_NAME} - Security credentials',
-                         f"PFA the document that contains login credentials for the "
-                         f"security desk that you requested.",
-                         settings.DOMAIN_EMAIL, [user.email])
-    email.content_subtype = 'html'
-    email.attach_file(pdf_path)
-    email.send()
+    html = get_template('pfa_user_details.html')
+    html_content = html.render({})
+
+    client_email = EmailMultiAlternatives('You\'re onboard!',
+                                          f'The PDF attached in this e-mail contains the login credentials for admins, residents and security desks. Please share the same with your society\'s residents. Please note that the password must be changed after the first login.',
+                                          settings.DOMAIN_EMAIL, [user.email])
+    client_email.attach_alternative(html_content, "text/html")
+    client_email.content_subtype = 'html'
+    client_email.attach_file(pdf_path)
+    client_email.send()
     os.remove(pdf_path)
 
     return JsonResponse(
