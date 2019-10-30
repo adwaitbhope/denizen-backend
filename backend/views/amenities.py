@@ -241,7 +241,8 @@ def get_booking_history(request):
 
     if user.type == 'admin':
         if with_payments_only:
-            bookings = Booking.objects.filter(township=user.township, payment=with_payments_only).order_by('-billing_from')
+            bookings = Booking.objects.filter(township=user.township, payment=with_payments_only).order_by(
+                '-billing_from')
         else:
             bookings = Booking.objects.filter(township=user.township).order_by('-billing_from')
 
@@ -262,10 +263,12 @@ def get_membership_payments(request):
 
     if user.type == 'admin':
         payments = Payment.objects.filter(township=user.township, type=Payment.CREDIT,
-                                          sub_type=Payment.MEMBERSHIP).order_by('-timestamp')
+                                          sub_type=Payment.MEMBERSHIP,
+                                          paytm_transaction_status=Payment.TXN_SUCCESSFUL).order_by('-timestamp')
 
     else:
-        payments = Payment.objects.filter(user=user, type=Payment.CREDIT, sub_type=Payment.MEMBERSHIP).order_by(
+        payments = Payment.objects.filter(user=user, type=Payment.CREDIT, sub_type=Payment.MEMBERSHIP,
+                                          paytm_transaction_status=Payment.TXN_SUCCESSFUL).order_by(
             '-timestamp')
 
     return JsonResponse([{'login_status': 1, 'request_status': 1},

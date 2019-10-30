@@ -172,12 +172,14 @@ def get_maintenance_payments(request):
     if user.type == 'admin':
         payments = Payment.objects.prefetch_related().filter(township=user.township,
                                                              sub_type=Payment.MAINTENANCE,
-                                                             timestamp__lt=timestamp).order_by('-timestamp')[
+                                                             timestamp__lt=timestamp).exclude(
+            paytm_transaction_status=Payment.TXN_POSTED).order_by('-timestamp')[
                    :PAGINATION_SIZE]
     else:
         payments = Payment.objects.prefetch_related().filter(township=user.township, user=user,
                                                              sub_type=Payment.MAINTENANCE,
-                                                             timestamp__lt=timestamp).order_by('-timestamp')[
+                                                             timestamp__lt=timestamp).exclude(
+            paytm_transaction_status=Payment.TXN_POSTED).order_by('-timestamp')[
                    :PAGINATION_SIZE]
 
     return JsonResponse([{'login_status': 1, 'request_status': 1}, [generate_dict(payment) for payment in payments]],
