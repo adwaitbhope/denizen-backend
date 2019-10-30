@@ -62,9 +62,8 @@ urlpatterns = [
     path('security/personnel/edit/', views.edit_security_personnel, name='edit_security_personnel'),
     path('security/personnel/delete/', views.delete_security_personnel, name='delete_security_personnel'),
 
-    path('finances/', views.get_finances, name='get_finances'),
-    path('finances/credit/new/', views.add_credit, name='add_credit'),
-    path('finances/debit/new/', views.add_credit, name='add_debit'),
+    path('finances/credit/new/', views.add_finance, name='add_finance'),
+    path('finances/generate_report/', views.generate_report, name='add_debit'),
 
 ]
 
