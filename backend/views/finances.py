@@ -18,7 +18,6 @@ def create_pdf(township, maintenances, memberships, one_times, expenses):
     memberships_total = 0
     one_times_total = 0
     expenses_total = 0
-    credit_total = 0
     for maintenance in maintenances:
         maintenances_total += maintenance.amount
 
@@ -40,7 +39,7 @@ def create_pdf(township, maintenances, memberships, one_times, expenses):
 
     pdf.set_font('Arial', 'B', 12)
     pdf.cell(150, 6, 'Credit', border=0, ln=0, align='L')
-    pdf.set_font('Times', '', 10)
+    pdf.set_font('Times', 'B', 10)
     pdf.cell(40, 6, 'Total: Rs. ' + str(credit_total), border=0, ln=1, align='L')
 
     pdf.set_x(20)
@@ -116,7 +115,7 @@ def create_pdf(township, maintenances, memberships, one_times, expenses):
     pdf.set_x(10)
     pdf.set_font('Arial', 'B', 12)
     pdf.cell(150, 6, 'Debit', border=0, ln=0, align='L')
-    pdf.set_font('Times', '', 10)
+    pdf.set_font('Times', 'B', 10)
     pdf.cell(40, 6, 'Total: Rs. ' + str(expenses_total), border=0, ln=1, align='L')
 
     pdf.set_font('Times', '', 10)
@@ -133,6 +132,14 @@ def create_pdf(township, maintenances, memberships, one_times, expenses):
         pdf.cell(20, 4, 'Rs. ' + str(expense.amount), border=0, ln=0, align='L')
         pdf.cell(20, 4, 'by ' + mode, border=0, ln=1, align='L')
         pdf.ln()
+
+    pdf.ln()
+    pdf.ln()
+    pdf.set_x(10)
+    pdf.set_font('Arial', 'B', 12)
+    pdf.cell(50, 6, 'Balance', border=0, ln=0, align='L')
+    pdf.set_font('Times', 'B', 10)
+    pdf.cell(40, 6, 'Total: Rs. ' + str(credit_total - expenses_total), border=0, ln=1, align='L')
 
     path = township.application_id + '.pdf'
     pdf.output(path)
