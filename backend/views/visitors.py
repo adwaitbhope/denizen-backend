@@ -33,7 +33,7 @@ def add_visitor_entry(request):
     wing = Wing.objects.get(pk=int(wing_id))
     visitor_apartment = User.objects.get(wing=wing, apartment=apartment, township=user.township)
 
-    Visitor.objects.create(first_name=first_name, last_name=last_name, apartment=visitor_apartment,
+    visitor = Visitor.objects.create(first_name=first_name, last_name=last_name, apartment=visitor_apartment,
                            township=user.township, in_timestamp=timezone.now())
 
     beams_client = PushNotifications(instance_id=settings.BEAMS_INSTANCE_ID, secret_key=settings.BEAMS_SECRET_KEY)
@@ -50,7 +50,7 @@ def add_visitor_entry(request):
         },
     )
 
-    return JsonResponse([{'login_status': 1, 'request_status': 1}], safe=False)
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, {'visitor_id': visitor.id}], safe=False)
 
 
 @csrf_exempt
