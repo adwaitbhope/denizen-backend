@@ -50,7 +50,7 @@ def add_visitor_entry(request):
         },
     )
 
-    return JsonResponse([{'login_status': 1, 'request_status': 1}, {'visitor_id': visitor.id}], safe=False)
+    return JsonResponse([{'login_status': 1, 'request_status': 1, 'visitor_id': visitor.id}, {'visitor_id': visitor.id}], safe=False)
 
 
 @csrf_exempt
