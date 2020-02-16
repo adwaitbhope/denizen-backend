@@ -211,5 +211,15 @@ class Visitor(models.Model):
     out_timestamp = models.DateTimeField(default=None, blank=True, null=True)
 
 
+class VehicleEntry(models.Model):
+    license_plate = models.CharField(max_length=14, default=None, blank=True, null=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+    township = models.ForeignKey(Township, on_delete=models.CASCADE, default=None, blank=True, null=True)
+
+    IN = 0
+    OUT = 1
+    direction = models.IntegerField(default=None, blank=True, null=True)
+
+
 class Entry(models.Model):
     pass

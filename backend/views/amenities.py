@@ -211,7 +211,7 @@ def book_amenity(request):
     booking = Booking.objects.create()
     booking.user = user
     booking.amenity_id = amenity_id
-    booking.township = user.township
+    booking.township_id = user.township_id
 
     if amenity.time_period == Amenity.PER_HOUR:
         hour = int(request.POST['hour'])

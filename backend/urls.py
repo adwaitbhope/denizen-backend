@@ -28,6 +28,8 @@ urlpatterns = [
 
     path('visitors/new/', views.add_visitor_entry, name='add_visitor'),
     path('visitors/get/', views.get_visitor_history, name='get_visitor_history'),
+    path('vehicles/new/', views.add_vehicle_entry, name='add_vehicle'),
+    path('vehicles/get/', views.get_vehicle_history, name='get_vehicle_history'),
 
     path('maintenance/', views.get_maintenance_payments, name='get_maintenance_payments'),
     path('maintenance/pay/initiate/', views.pay_maintenance_initiate, name='pay_maintenance_initiate'),

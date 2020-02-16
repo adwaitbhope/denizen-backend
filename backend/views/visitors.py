@@ -88,3 +88,36 @@ def get_visitor_history(request):
 
     return JsonResponse([{'login_status': 1, 'request_status': 1}, [generate_dict(visitor) for visitor in visitors]],
                         safe=False)
+
+
+@csrf_exempt
+def add_vehicle_entry(request):
+    license_plate = request.POST['license_plate'].upper()
+    direction = request.POST['direction']
+    township_id = request.POST['township_id']
+
+    VehicleEntry.objects.create(license_plate=license_plate, timestamp=timezone.now(), direction=direction, township_id=township_id)
+    return JsonResponse({'request_status': 1})
+
+
+@csrf_exempt
+def get_vehicle_history(request):
+    username = request.POST['username']
+    password = request.POST['password']
+
+    user = authenticate(request, username=username, password=password)
+
+    if user is None:
+        return JsonResponse([{'login_status': 0}], safe=False)
+
+    vehicles = VehicleEntry.objects.order_by('-timestamp')
+
+    def generate_dict(vehicle):
+        data_dict = dict()
+        data_dict['license_plate'] = vehicle.license_plate
+        data_dict['timestamp'] = vehicle.timestamp.astimezone(INDIA)
+        data_dict['direction'] = 'IN' if vehicle.direction == VehicleEntry.IN else 'OUT'
+        return data_dict
+
+    return JsonResponse([{'login_status': 1, 'request_status': 1}, [generate_dict(vehicle) for vehicle in vehicles]],
+                        safe=False)
